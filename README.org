@@ -30,19 +30,13 @@
 </div>
 
 <div align="center">
-<a href="https://github.com/Kyonax/kyo-recording-automation">
-  <img src="https://img.shields.io/github/languages/top/Kyonax/kyo-recording-automation" alt="Top language">
-</a>
+<img src="https://img.shields.io/github/languages/top/Kyonax/kyo-recording-automation" alt="Top language">
 <br>
-<a href="https://github.com/Kyonax">
-  <img src="https://img.shields.io/github/followers/Kyonax" alt="GitHub followers">
-</a>
-<a href="https://github.com/Kyonax/kyo-recording-automation">
-  <img src="https://img.shields.io/github/stars/Kyonax/kyo-recording-automation" alt="GitHub Repo stars">
-</a>
 <a href="https://x.com/kyonax_on_tech">
   <img src="https://img.shields.io/twitter/follow/kyonax_on_tech" alt="X followers">
 </a>
+<img src="https://img.shields.io/github/followers/Kyonax" alt="GitHub followers">
+<img src="https://img.shields.io/github/stars/Kyonax/kyo-recording-automation" alt="GitHub Repo stars">
 </div>
 #+END_HTML
 
