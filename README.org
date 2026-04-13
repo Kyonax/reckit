@@ -1,28 +1,30 @@
-#+TITLE: OBS Capture-Time Automation Toolkit for Kyonax Content Creation
 #+AUTHOR: [[https://orcid.org/0009-0006-4459-5538][Cristian D. Moreno - Kyonax]]
 #+EMAIL: kyonax.corp@gmail.com
 #+DATE: Apr 13, 2026
 #+FILETAGS: :KYO:OBS:AUTOMATION:CONTENT:
 #+LAST_UPDATE: Apr 13, 2026
 
-Cyberpunk HUD overlays, scene configs, and OBS WebSocket scripts, a capture-time automation toolkit built to eliminate post-production work across every Kyonax content creation brand (=@kyonax_on_tech=, =@is.kyonax=, =CCS=, and any future channel under the Kyonax identity).
-
 #+BEGIN_HTML
-<p align="center">
-  <pre><code>
-    ┌────────────────────────────────────────────┐
-    │                                            │
-    │  ┌──┐                                 ┌──┐ │  O
-    │  └──┘                                 └──┘ │  O
-    │                   [ + ]                    │  B
-    │  ┌──┐                                 ┌──┐ │  B
-    │  └──┘                                 └──┘ │  S
-    │                                            │  S
-    │  [REC] 36:09:33        @kyonax_on_tech  // │
-    └────────────────────────────────────────────┘
-  </code></pre>
-</p>
+<div align="center">
+<table align="center"><tr><td>
+<pre>
+┌────────────────────────────────────────────┐
+│                                            │
+│  ┌──┐                                 ┌──┐ │  O
+│  └──┘                                 └──┘ │  O
+│                   [ + ]                    │  B
+│  ┌──┐                                 ┌──┐ │  B
+│  └──┘                                 └──┘ │  S
+│                                            │  S
+│  [REC] 36:09:33        @kyonax_on_tech  // │
+└────────────────────────────────────────────┘
+</pre>
+</td></tr></table>
+</div>
 #+END_HTML
+
+* OBS Capture-Time Automation Toolkit for Kyonax Content Creation
+Cyberpunk HUD overlays, scene configs, and OBS WebSocket scripts, a capture-time automation toolkit built to eliminate post-production work across every Kyonax content creation brand (=@kyonax_on_tech=, =@is.kyonax=, =CCS=, and any future channel under the Kyonax identity).
 
 OBS automation toolkit for every *[[https://github.com/kyonax][Kyonax]]* content creation brand, overlays, scene configs, and scripts to get it right at capture time and skip the editing.
 
