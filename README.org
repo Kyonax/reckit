@@ -29,6 +29,8 @@
 
 <div align="center">
 <strong>R</strong>ealtime &middot; <strong>E</strong>dit-free &middot; <strong>C</strong>apture &middot; <strong>K</strong>yonax &middot; <strong>I</strong>ntegrated &middot; <strong>T</strong>oolkit
+<br>
+<br>
 </div>
 
 <div align="center">
@@ -42,7 +44,7 @@
 </div>
 #+END_HTML
 
-* Realtime Edit-free Capture Kyonax Integrated Toolkit (Record Toolkit)
+* What is RECKIT? 
 Cyberpunk HUD overlays, scene configs, and OBS WebSocket scripts, a capture-time automation toolkit built to eliminate post-production work across every Kyonax content creation brand (=@kyonax_on_tech=, =@is.kyonax=, =CCS=, and any future channel under the Kyonax identity).
 
 OBS automation toolkit for every *[[https://github.com/kyonax][Kyonax]]* content creation brand, overlays, scene configs, and scripts to get it right at capture time and skip the editing.
