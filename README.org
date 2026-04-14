@@ -36,9 +36,9 @@
 
 <div align="center">
 <a href="#"><img src="https://img.shields.io/github/languages/top/Kyonax/reckit?labelColor=FFD400&color=FFE564" alt="Top language"></a>
-<a href="#"><img src="https://img.shields.io/badge/license-MPL--2.0-9A51C0?labelColor=7409AA" alt="MPL-2.0"></a>
-<a href="#"><img src="https://img.shields.io/badge/license-Apache--2.0-9A51C0?labelColor=7409AA" alt="Apache-2.0"></a>
-<a href="#"><img src="https://img.shields.io/badge/version-v0.1-FFE564?labelColor=FFD400" alt="v0.1"></a>
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-MPL--2.0-9A51C0?labelColor=7409AA" alt="MPL-2.0"></a>
+<a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-Apache--2.0-9A51C0?labelColor=7409AA" alt="Apache-2.0"></a>
+<a href="#"><img src="https://img.shields.io/badge/version-v0.1-755AC4?labelColor=3B14AF" alt="v0.1"></a>
 <a href="https://github.com/ccs-devhub"><img src="https://img.shields.io/badge/CCS_Member-FFE564?&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDAgNDAwIj48cGF0aCBmaWxsPSIjOUI4MjAwIiBkPSJNIDI3IDIwMCBsIDAgMTczIDE3MyAwIDE3MyAwIDAgLTE3MyAwIC0xNzMgLTE3MyAwIC0xNzMgMCAwIDE3MyB6IG0gMzMyIDAgbCAwIDE1OSAtMTU5LjUgMCAtMTU5LjUgMCAwIC0xNTkgMCAtMTU5IDE1OS41IDAgMTU5LjUgMCAwIDE1OSB6IE0gNTIgMTIwIGwgMCA2OCA0OCAwIDQ4IDAgMCAtMjAgMCAtMjAgNTEuNSAwIDUxLjUgMCAwIDIwIDAgMjAgMjEuNSAwIDIxLjUgMCAwIC00MS41IDAgLTQxLjUgLTk0LjUgMCAtOTQuNSAwIDAgMjAgMCAyMCAtNSAwIC01IDAgMCAtMjUgMCAtMjUgMTA1IDAgMTA1IDAgMCA1MS41IDAgNTEuNSAtMTI2LjUgMCAtMTI2LjUgMCAwIDQ4IDAgNDggMTI2LjMgMC4yIDEyNi4yIDAuMyAwLjMgNS4zIDAuMyA1LjIgLTEyNi41IDAgLTEyNi42IDAgMCAyMS41IDAgMjEuNSAxNDggMCAxNDggMCAwIC00OCAwIC00OCAtMTI2LjIgLTAuMiAtMTI2LjMgLTAuMyAtMC4zIC01LjMgLTAuMyAtNS4yIDEyNi41IDAgMTI2LjYgMCAwIC05NC41IDAgLTk0LjUgLTE0OCAwIC0xNDggMCAwIDY4IHogTSAxNTkgMTczLjUgbCAwIDE0LjUgNDEgMCA0MSAwIDAgLTE0LjUgMCAtMTQuNSAtNDEgMCAtNDEgMCAwIDE0LjUgeiIvPjwvc3ZnPg==&labelColor=FFD400&style=flat-square" alt="Cyber Code Syndicate"></a>
 <br>
 <a href="https://x.com/kyonax_on_tech">
