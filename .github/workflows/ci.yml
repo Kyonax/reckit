@@ -63,33 +63,70 @@ jobs:
         run: |
           EXIT_CODE=0
 
+          # Emit each grep hit as a GitHub annotation pinned to
+          # the file + line, and also print a human-readable
+          # line to the raw log so the failure is obvious there.
+          #
+          # $1 = grep output (file:line:content lines)
+          # $2 = category label for the annotation message
+          annotate_hits() {
+            local hits="$1"
+            local label="$2"
+            while IFS= read -r hit; do
+              [ -z "$hit" ] && continue
+              local file="${hit%%:*}"
+              local rest="${hit#*:}"
+              local line="${rest%%:*}"
+              local content="${rest#*:}"
+              echo "[$label] $file:$line :: $content"
+              echo "::error file=${file},line=${line}::${label} — ${content}"
+            done <<< "$hits"
+          }
+
           echo "=== Scanning for dangerous function calls ==="
-          if grep -rn --include='*.js' --include='*.mjs' \
-               -E 'eval\(|[^.]Function\(|\.innerHTML\s*=|document\.write\(' .; then
-            echo "::error::Dangerous function calls detected (eval, Function, innerHTML, document.write)"
+          # eslint.config.mjs is excluded: it legitimately
+          # contains literal strings describing the banned
+          # patterns (they are the rule messages that forbid
+          # the patterns everywhere else).
+          HITS=$(grep -rn --include='*.js' --include='*.mjs' \
+               --exclude-dir='node_modules' --exclude-dir='dist' --exclude-dir='.cache' \
+               --exclude='eslint.config.mjs' \
+               -E 'eval\(|[^.]Function\(|\.innerHTML\s*=|document\.write\(' . || true)
+          if [ -n "$HITS" ]; then
+            annotate_hits "$HITS" "dangerous-call"
+            echo "::error::Dangerous function calls detected (eval, Function, innerHTML, document.write). See annotations above."
             EXIT_CODE=1
           fi
 
           echo ""
           echo "=== Scanning for setTimeout/setInterval with string arguments ==="
-          if grep -rn --include='*.js' --include='*.mjs' \
-               -E 'setTimeout\(\s*["\x27`]|setInterval\(\s*["\x27`]' .; then
+          HITS=$(grep -rn --include='*.js' --include='*.mjs' \
+               --exclude-dir='node_modules' --exclude-dir='dist' --exclude-dir='.cache' \
+               -E 'setTimeout\(\s*["\x27`]|setInterval\(\s*["\x27`]' . || true)
+          if [ -n "$HITS" ]; then
+            annotate_hits "$HITS" "implicit-eval"
             echo "::error::setTimeout/setInterval called with string argument -- use a function reference instead"
             EXIT_CODE=1
           fi
 
           echo ""
           echo "=== Scanning for hardcoded tokens/secrets ==="
-          if grep -rn --include='*.js' --include='*.mjs' \
-               -iE '(token|secret|api_key|password|apikey|api_secret)\s*[=:]\s*["\x27`]' .; then
+          HITS=$(grep -rn --include='*.js' --include='*.mjs' \
+               --exclude-dir='node_modules' --exclude-dir='dist' --exclude-dir='.cache' \
+               -iE '(token|secret|api_key|password|apikey|api_secret)\s*[=:]\s*["\x27`]' . || true)
+          if [ -n "$HITS" ]; then
+            annotate_hits "$HITS" "possible-secret"
             echo "::error::Possible hardcoded secret detected"
             EXIT_CODE=1
           fi
 
           echo ""
           echo "=== Scanning for insecure http:// URLs ==="
-          if grep -rn --include='*.js' --include='*.mjs' \
-               -E 'http://' . | grep -v 'localhost' | grep -v '127.0.0.1'; then
+          HITS=$(grep -rn --include='*.js' --include='*.mjs' \
+               --exclude-dir='node_modules' --exclude-dir='dist' --exclude-dir='.cache' \
+               -E 'http://' . | grep -v 'localhost' | grep -v '127.0.0.1' || true)
+          if [ -n "$HITS" ]; then
+            annotate_hits "$HITS" "insecure-http"
             echo "::error::Insecure http:// URL detected -- use https:// instead"
             EXIT_CODE=1
           fi
@@ -112,24 +149,37 @@ jobs:
       - name: Verify copyright headers
         run: |
           EXIT_CODE=0
-          FILES=$(find . -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.html' -o -name '*.css' \) \
+          MISSING=()
+          FILES=$(find . -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.html' -o -name '*.css' -o -name '*.vue' -o -name '*.scss' \) \
                     ! -path './node_modules/*' ! -path './dist/*' ! -path './.cache/*' ! -path './assets/*')
 
           if [ -z "$FILES" ]; then
-            echo "No .js/.mjs/.html/.css files found -- nothing to check."
+            echo "No source files found -- nothing to check."
             exit 0
           fi
 
           for f in $FILES; do
             HEADER=$(head -n 5 "$f")
             if ! echo "$HEADER" | grep -q "Cristian D. Moreno"; then
-              echo "::error file=$f::Missing copyright header (\"Cristian D. Moreno\" not in first 5 lines)"
+              # Print to the raw log so the filename is visible
+              # even without expanding the PR annotation panel.
+              echo "[MISSING HEADER] $f"
+              # GitHub annotation pinned to line 1 of the file.
+              echo "::error file=$f,line=1::Missing copyright header (\"Cristian D. Moreno\" not in first 5 lines of $f)"
+              MISSING+=("$f")
               EXIT_CODE=1
             fi
           done
 
+          echo ""
           if [ "$EXIT_CODE" -eq 0 ]; then
             echo "All files contain the required copyright header."
+          else
+            echo "=== Summary ==="
+            echo "${#MISSING[@]} file(s) missing a copyright header:"
+            for f in "${MISSING[@]}"; do
+              echo "  - $f"
+            done
           fi
 
           exit $EXIT_CODE

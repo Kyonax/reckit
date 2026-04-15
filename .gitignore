@@ -13,11 +13,9 @@ dist-ssr/
 .vite/
 *.local
 
-# NOTE: package-lock.json was excluded during the bootstrap
-# phase. Now that runtime deps exist, committing the lockfile
-# is recommended for reproducible builds (`npm ci`) and
-# supply-chain defense. Review before the next release cut.
-package-lock.json
+# package-lock.json is COMMITTED — required by the CI workflow
+# (`npm ci`) and gives reproducible installs + supply-chain
+# defense. Do NOT re-add it to this ignore list.
 
 # ── Build / cache ────────────────────────────────────────────
 .cache/
