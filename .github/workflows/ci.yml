@@ -222,22 +222,73 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PROTECTED_FILES="LICENSE LICENSE-APACHE NOTICE CHANGELOG.org"
+          # Tiered list of files where silent modification could
+          # compromise the repo. Grouping drives the warning
+          # message so reviewers see WHY each file matters.
+          LEGAL_FILES="LICENSE LICENSE-APACHE NOTICE LICENSING.org"
+          GOVERNANCE_FILES=".github/CODEOWNERS .github/SECURITY.org .github/PULL_REQUEST_TEMPLATE.md"
+          SUPPLY_CHAIN_FILES="package.json package-lock.json"
+          CI_SECURITY_FILES=".github/workflows/ci.yml .github/workflows/release.yml eslint.config.mjs"
+          BUILD_CONFIG_FILES="vite.config.js .gitignore .env.example"
+          RELEASE_ARTIFACT_FILES="CHANGELOG.org README.org"
+
           CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD 2>/dev/null || echo "")
-          WARNINGS=""
 
-          for pf in $PROTECTED_FILES; do
-            if echo "$CHANGED" | grep -qx "$pf"; then
-              WARNINGS="${WARNINGS}- \`${pf}\` was modified\n"
+          LEGAL_HITS=""
+          GOVERNANCE_HITS=""
+          SUPPLY_HITS=""
+          CI_HITS=""
+          BUILD_HITS=""
+          RELEASE_HITS=""
+
+          check_category() {
+            local category_name="$1"
+            local files="$2"
+            local hits=""
+            for pf in $files; do
+              if echo "$CHANGED" | grep -qx "$pf"; then
+                hits="${hits}- \`${pf}\` was modified\n"
+              fi
+            done
+            echo -n "$hits"
+          }
+
+          LEGAL_HITS=$(check_category "Legal" "$LEGAL_FILES")
+          GOVERNANCE_HITS=$(check_category "Governance" "$GOVERNANCE_FILES")
+          SUPPLY_HITS=$(check_category "Supply chain" "$SUPPLY_CHAIN_FILES")
+          CI_HITS=$(check_category "CI / Security" "$CI_SECURITY_FILES")
+          BUILD_HITS=$(check_category "Build / Config" "$BUILD_CONFIG_FILES")
+          RELEASE_HITS=$(check_category "Release artifact" "$RELEASE_ARTIFACT_FILES")
+
+          # Compose the comment only for non-empty categories.
+          COMMENT=""
+          add_section() {
+            local title="$1"
+            local hits="$2"
+            local note="$3"
+            if [ -n "$hits" ]; then
+              COMMENT="${COMMENT}### ${title}\n\n${hits}\n*${note}*\n\n"
             fi
-          done
+          }
 
-          if [ -n "$WARNINGS" ]; then
-            COMMENT="## Protected Files Modified\n\nThe following protected files were changed in this PR:\n\n${WARNINGS}\nPlease ensure these changes are intentional and have been reviewed carefully."
+          add_section "Legal / Licensing" "$LEGAL_HITS" \
+            "Modifying these files changes the project's legal posture. Confirm with the maintainer before merging."
+          add_section "Governance" "$GOVERNANCE_HITS" \
+            "CODEOWNERS / SECURITY / PR template changes affect how every future PR is reviewed. Review carefully."
+          add_section "Supply Chain" "$SUPPLY_HITS" \
+            "Dependency or lockfile changes. Verify the diff (no unexpected packages, no version downgrades)."
+          add_section "CI / Security Config" "$CI_HITS" \
+            "Workflow / lint config. A quiet edit here can disable gates — diff against origin carefully."
+          add_section "Build / Config" "$BUILD_HITS" \
+            "Build or gitignore config. Verify the build still passes and no ignored paths were accidentally un-ignored."
+          add_section "Release Artifact" "$RELEASE_HITS" \
+            "Release-tracking files. Expected on release PRs; flag on non-release PRs."
+
+          if [ -n "$COMMENT" ]; then
+            COMMENT="## Protected Files Modified\n\nOne or more files in the protected set were changed in this PR. Each category below explains why the file matters.\n\n${COMMENT}"
             echo -e "$COMMENT"
             echo "::warning::Protected files were modified in this PR -- review carefully"
 
-            # Post a PR comment if running in a pull request context
             if [ -n "${{ github.event.pull_request.number }}" ]; then
               gh pr comment "${{ github.event.pull_request.number }}" \
                 --body "$(echo -e "$COMMENT")" || true
