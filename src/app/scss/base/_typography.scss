@@ -1,0 +1,12 @@
+/*
+ * Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+ */
+
+@use "../abstracts/mixins";
+
+@include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-Regular", 400, normal);
+@include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-Bold", 700, normal);
+@include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-Italic", 400, italic);
+@include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-BoldItalic", 700, italic);

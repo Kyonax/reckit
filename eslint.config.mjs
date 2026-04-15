@@ -1,4 +1,8 @@
 /**
+ * Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+ *
  * ================================================================
  *  RECKIT -- ESLint Flat-Config
  * ================================================================
@@ -36,8 +40,8 @@
 import js from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import security from 'eslint-plugin-security';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 
@@ -64,6 +68,7 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
+        __APP_VERSION__: 'readonly',
       },
     },
 
@@ -192,6 +197,24 @@ export default [
       '**/*.spec.{js,mjs}',
       '**/__tests__/**/*.{js,mjs}',
     ],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        // Vitest globals (enabled via `test.globals: true` in
+        // vite.config.js — no import needed inside tests).
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
+      },
+    },
     rules: {
       'no-magic-numbers': 'off',
       'no-console': 'off',
