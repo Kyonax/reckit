@@ -3,10 +3,77 @@
 #+EMAIL: kyonax.corp@gmail.com
 #+DATE: Apr 13, 2026
 #+FILETAGS: :KYO:RECKIT:CHANGELOG:
-#+LAST_UPDATE: Apr 14, 2026
+#+LAST_UPDATE: Apr 15, 2026
 #+OPTIONS: toc:nil num:nil H:4
 
+* [TODO]
+** BUGs [0/1]
+- [ ] The Subscriber Button should have a Link that takes the user directly so Subscribe Action.
+
+** FEATUREs
+*** LANDING [0/1]
+- [ ] Add a common / shared widgets section to the landing page index (audio-meter, live-readout, and future drop-in widgets).
+*** WEBSOCKETs [0/1]
+- [ ] Create the Websocket Item Explanation (Image, Title, Description, Optional Banners).
+
 * [Unreleased]
+
+* [v0.3] — 2026-04-15 :: Vue App + CAM-LOG Overlay + Landing Index
+
+** Added
+- Vue 3 + Vite 6 + Vue Router 4 + obs-websocket-js 5 + sass app at =src/=
+- =src/main.js=, =src/App.vue=, =src/router.js= (brand-routed)
+- =index.html= (Vite entry) + =vite.config.js=
+- SCSS 7-1 architecture at =src/app/scss/= (abstracts / base / layout / components)
+- =$colors= / =$typo-scale= maps and =:root= CSS custom properties via =@each= loops
+- Granular x25 type scale: =--fs-100= → =--fs-800= across small / medium / large breakpoints
+- =hud-label-base= SCSS mixin (shared HUD typography) and =cyberpunk-glow= mixin
+- SpaceMono Nerd Font stack at =src/app/fonts/= (Regular, Bold, Italic, BoldItalic)
+- =.env= / =.env.example= + =src/shared/config.js= (frozen =OBS_CONFIG= from =VITE_*= vars)
+- =src/shared/version.js= — single source of truth for runtime version string; =package.json= version injected via Vite =define: { __APP_VERSION__ }=
+- =src/shared/composables/=: =use-obs-websocket= (singleton, auto-reconnect), =use-recording-status= (RecordStateChanged + take counter + HH:MM:SS), =use-audio-analyzer= (InputVolumeMeters), =use-scene-name= (CurrentProgramSceneChanged)
+- =src/shared/components/=: =corner-bracket=, =hud-frame=, =status-indicator=, =recording-timer=, =overlay-card=, =preview-modal=
+- =src/shared/widgets/= — brand-agnostic drop-in widgets: =audio-meter.vue= (self-contained OBS audio visualizer), =live-readout.vue= (text display with =refresh_ms= throttle)
+- =src/shared/data/overlays.js= — overlay registry (=id=, =brand=, =name=, =description=, =use_cases[]=, =path=, =width/height/fps=, =requires[]=, =triggers[]=, =status=)
+- CAM-LOG overlay (=src/brands/kyonax-on-tech/cam-person.vue=) at =/@kyonax_on_tech/cam-person=
+  + HUD frame + corner brackets + crosshair + identity block + toolkit-id
+  + Dynamic top-right label =SES::<scene>::T<NN>= driven by scene + take counter
+  + Recording timer (REC + dot turn red when recording; MODE + time stay white)
+  + Audio meter bound to =Mic/Aux= with 8× gain
+  + Live diagnostic readout (=WS:… | AUDIO:… | L0:…=, throttled to 5fps)
+- ITEM-EXPLAIN overlay declared in registry (=status: 'planned'=, SHOW / HIDE / CYCLE triggers defined)
+- Landing page (=src/views/home.vue=) at =/=
+  + Sticky frosted-glass meta bar (SOURCES / BRANDS / READY / CANVAS)
+  + ASCII logo loaded via Vite =?raw= import of =.github/assets/logo.txt= (no duplication)
+  + Brand tabs auto-derived from the overlay registry
+  + Responsive 3-column overlay card grid (1-col on mobile) with search filter + status chips
+  + Search haystack covers name, size, cache, requirements, and use-case keywords
+  + Preview modal — iframe scaled to canvas aspect-ratio, responsive via =window.resize= listener, RELOAD + trigger buttons in footer
+  + Trigger protocol via =postMessage= (dev testing only)
+- Overlay card description supports =**bold**= markers (parsed into segments, no =v-html=)
+- =use_cases[]= keyword tags on each card, included in the search haystack
+- Typography variable naming convention documented in Section 1.11 of the session file
+
+** Changed
+- =package.json= version =0.1.0= → =0.3.0= (canonical version)
+- =README.org= =#+VERSION:= + logo footer + shields.io badge → =v0.3=
+- =vite.config.js= exposes =__APP_VERSION__= from =package.json= at build time
+- =eslint.config.mjs= declares =__APP_VERSION__= as a readonly global
+- =.gitignore= covers =dist/=, =node_modules/=, =.env=, local artifacts
+
+** Decided
+- OBS audio source: =InputVolumeMeters= event, not =getUserMedia= (CEF limitations)
+- Default audio input: =Mic/Aux=. Skip Desktop Audio (zeroes) and browser sources (empty levels)
+- Audio peak extraction: =inputLevelsMul[ch][1]=. Gain 8× to fill the visualizer scale
+- Vue reactivity: =ref= with new array assignment per frame for v-for props (=shallowRef= + =triggerRef= does not cross the props boundary)
+- =useObsWebsocket= is a module-level singleton — one connection shared by every composable/component
+- =EventSubscription.All | EventSubscription.InputVolumeMeters= must be explicitly opted-in (high-volume)
+- Take counter resets per browser source refresh (predictable per-session state)
+- Overlay description schema splits WHAT (=description=) from WHEN (=use_cases[]= keywords) from technical prereqs (=requires[]=). No em dashes (=—=) anywhere in prose fields
+- Brand-agnostic widgets live in =src/shared/widgets/=; primitives that still need wiring live in =src/shared/components/=
+- =postMessage= trigger protocol is dev-only; production triggers come from OBS WebSocket events
+- Brand theming happens via =--clr-primary-*= CSS custom properties; components never reference SASS variables directly
+- Version centralization: =package.json= → Vite =define= → =src/shared/version.js= → UI. Bump =package.json= and =README.org= and the UI follows automatically
 
 * [v0.1] — 2026-04-13 :: Brand Bootstrap
 ** Added

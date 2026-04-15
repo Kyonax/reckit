@@ -1,29 +1,132 @@
-# Dependencies
+# ─────────────────────────────────────────────────────────────
+#  RECKIT — .gitignore
+# ─────────────────────────────────────────────────────────────
+#  Organized by concern. Keep this file the single source of
+#  truth for what gets ignored. When in doubt, prefer ignoring.
+#  Cross-reference: .github/SECURITY.org
+# ─────────────────────────────────────────────────────────────
+
+# ── Node / Vue / Vite ────────────────────────────────────────
 node_modules/
-
-# Build output
 dist/
+dist-ssr/
+.vite/
+*.local
 
-# Cache
-.cache/
-
-# Environment variables
-.env
-.env.local
-.env.*
-
-# Logs
-*.log
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Test coverage
-coverage/
-
-# Lock file (excluded until runtime dependencies are added)
+# NOTE: package-lock.json was excluded during the bootstrap
+# phase. Now that runtime deps exist, committing the lockfile
+# is recommended for reproducible builds (`npm ci`) and
+# supply-chain defense. Review before the next release cut.
 package-lock.json
 
-# Local setup guides
+# ── Build / cache ────────────────────────────────────────────
+.cache/
+.parcel-cache/
+.turbo/
+.next/
+.nuxt/
+.svelte-kit/
+.output/
+.sass-cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+
+# ── Logs ─────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ── Test / coverage ──────────────────────────────────────────
+coverage/
+.nyc_output/
+*.lcov
+
+# ── Environment / secrets ────────────────────────────────────
+# Real values live only on the contributor's machine.
+.env
+.env.local
+.env.*.local
+.env.*
+# But the template IS meant to be committed.
+!.env.example
+
+# Hard ban on common secret-file extensions — never commit
+# these even accidentally. Add a specific pattern here if you
+# ever need to intentionally commit an encrypted variant.
+*.pem
+*.key
+*.crt
+*.cert
+*.pfx
+*.p12
+id_rsa
+id_rsa.*
+id_dsa
+id_dsa.*
+id_ed25519
+id_ed25519.*
+known_hosts
+secrets/
+credentials/
+.secrets/
+.aws/
+.gcloud/
+auth.json
+
+# RECKIT-specific: GPG-encrypted runtime config kept LOCAL by
+# choice. Decrypt with `gpg --decrypt .rc.gpg`.
+.rc
+.rc.gpg
+
+# ── Editors / IDEs ───────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+\#*\#
+.\#*
+.claude/
+.aider*
+
+# ── OS junk ──────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.DocumentRevisions-V100
+.TemporaryItems
+.VolumeIcon.icns
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ── Temp / backup ────────────────────────────────────────────
+*.bak
+*.orig
+*.tmp
+*.temp
+tmp/
+temp/
+
+# ── Local-only RECKIT contributor files ──────────────────────
+# Setup notes / scratchpad docs that live on the contributor's
+# machine only.
 .github/BRANCHES.org
+
+# Clipboard buffer for the most recent generated commit / PR
+# text. Overwritten in place every time new text is produced.
+# Local only — never committed.
+COMMIT.org
+PR.org

@@ -36,8 +36,8 @@
 import js from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
 import jsdoc from 'eslint-plugin-jsdoc';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import security from 'eslint-plugin-security';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unicorn from 'eslint-plugin-unicorn';
 import globals from 'globals';
 
@@ -64,6 +64,7 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
+        __APP_VERSION__: 'readonly',
       },
     },
 
