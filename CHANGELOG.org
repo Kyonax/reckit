@@ -3,10 +3,118 @@
 #+EMAIL: kyonax.corp@gmail.com
 #+DATE: Apr 13, 2026
 #+FILETAGS: :KYO:RECKIT:CHANGELOG:
-#+LAST_UPDATE: Apr 14, 2026
+#+LAST_UPDATE: Apr 15, 2026
 #+OPTIONS: toc:nil num:nil H:4
 
+* [TODO]
+** BUGs [0/1]
+- [ ] The Subscriber Button should have a Link that takes the user directly so Subscribe Action.
+
+** FEATUREs
+*** LANDING [0/1]
+- [ ] Add a common / shared widgets section to the landing page index (audio-meter, live-readout, and future drop-in widgets).
+*** WEBSOCKETs [0/1]
+- [ ] Create the Websocket Item Explanation (Image, Title, Description, Optional Banners).
+
+** INFRASTRUCTURE [0/1]
+*** TESTING [0/1]
+- [ ] Set up an automated unit-test suite (Vitest recommended for Vite alignment). Cover composables first (=use-recording-status=, =use-audio-analyzer=, =use-scene-name=), then widgets (=audio-meter=, =live-readout=), then landing-page computed logic (search filter, brand tabs, preview modal scaling). Wire =npm run test= into the CI workflow.
+
 * [Unreleased]
+
+* [v0.3] — 2026-04-15 :: Vue App + CAM-LOG Overlay + Landing Index
+
+*Summary:* First end-to-end working build of RECKIT — Vue 3 + Vite app with brand-based routing, the CAM-LOG overlay wired to OBS WebSocket, a landing page index of every browser source, a brand-agnostic widgets split, a centralized version pipeline, and the full CI gate suite (lint, security, license, unit tests, Pre-Check Failed label) that backs every merge.
+
+** Added
+
+*** Foundation (=src/=)
+- Vue 3 + Vite 6 + Vue Router 4 + obs-websocket-js 5 + sass application
+- =src/main.js=, =src/App.vue=, =src/router.js= (brand-routed)
+- =index.html= (Vite entry) + =vite.config.js= (hosts =__APP_VERSION__= define and the Vitest config)
+- =src/shared/config.js= — frozen =OBS_CONFIG= read from =VITE_*= env vars
+- =src/shared/version.js= — exports =VERSION= and =VERSION_TAG= derived from =package.json=
+- =.env.example= committed template
+
+*** Styles (=src/app/=)
+- SCSS 7-1 architecture at =src/app/scss/= (abstracts / base / layout / components)
+- =$colors= and =$typo-scale= maps lifted to =:root= CSS custom properties via =@each= loops
+- Granular x25 type scale from =--fs-100= to =--fs-800=, indexed across small / medium / large breakpoints
+- =hud-label-base= SCSS mixin (shared HUD typography) and =cyberpunk-glow= mixin
+- SpaceMono Nerd Font stack at =src/app/fonts/SpaceMono/= (Regular, Bold, Italic, BoldItalic)
+
+*** Composables (=src/shared/composables/=)
+- =use-obs-websocket= — singleton OBS WebSocket with auto-reconnect
+- =use-recording-status= — =RecordStateChanged= + take counter + HH:MM:SS formatter
+- =use-audio-analyzer= — consumes =InputVolumeMeters=, defaults to =Mic/Aux=, 8× gain, 16 bars
+- =use-scene-name= — consumes =CurrentProgramSceneChanged=
+
+*** Components (=src/shared/components/=)
+- HUD primitives: =corner-bracket=, =hud-frame=, =status-indicator=, =recording-timer=
+- =overlay-card.vue= — landing card with =**bold**= emphasis parser, =use_cases[]= chip tags, 2-col spec grid
+- =preview-modal.vue= — iframe scaled to canvas aspect-ratio via CSS custom property on =window.resize=
+
+*** Widgets (=src/shared/widgets/=, brand-agnostic drop-ins)
+- =audio-meter.vue= — self-contained OBS audio visualizer; props =obs=, =source_name=, =bar_count=; emits =update:state=
+- =live-readout.vue= — text display with optional =refresh_ms= sampling throttle
+
+*** Overlays
+- =src/shared/data/overlays.js= — overlay registry schema (=id=, =brand=, =name=, =description=, =use_cases[]=, =path=, dimensions, =requires[]=, =triggers[]=, =status=)
+- =src/brands/kyonax-on-tech/cam-person.vue= — CAM-LOG HUD at =/@kyonax_on_tech/cam-person=
+  - Dynamic =SES::<scene>::T<NN>= label driven by scene + take counter
+  - Recording timer (REC text + dot red while recording; MODE + time stay white)
+  - =<audio-meter>= bound to =Mic/Aux=
+  - =<live-readout>= diagnostic line (=WS:… | AUDIO:… | L0:…=, 200ms throttle)
+- ITEM-EXPLAIN declared in the registry (=status: 'planned'=, SHOW / HIDE / CYCLE triggers defined)
+
+*** Landing Page (=src/views/home.vue=)
+- Sticky frosted-glass meta bar (SOURCES / BRANDS / READY / CANVAS)
+- ASCII logo loaded via Vite =?raw= import of =.github/assets/logo.txt= (no duplication)
+- Brand tabs auto-derived from the overlay registry
+- Responsive card grid (3-col desktop, 1-col mobile) with search filter and status chips
+- Search haystack covers name, size, cache, requirements, and =use_cases[]= keywords
+- Preview modal with iframe scaled to canvas aspect-ratio; RELOAD and trigger buttons in footer
+- Trigger protocol via =postMessage= (dev testing only; production uses OBS events)
+
+*** CI & Tests
+- Vitest 4 + =@vue/test-utils= + =happy-dom= wired into =vite.config.js= (shared plugin pipeline, zero-config for Vue 3 SFCs)
+- =src/shared/version.test.js= — 3 tests covering version pipeline
+- =src/shared/data/overlays.test.js= — 14 tests enforcing registry schema, unique ids, status vocab, =use_cases[]= type, path format, canvas dims, em-dash ban
+- =.github/workflows/ci.yml= Unit Tests job — =npm ci= + =npm run test=
+- =.github/workflows/ci.yml= Pre-Check Label job — aggregates all gate results via =needs:= and toggles the =Pre-Check Failed= label via =gh pr edit=
+- Broader CI triggers — =pull_request= runs on any target branch; =push= fires on =feat-*=, =feat/**=, =feature/**=, =fix-*=, =fix/**=
+- CI concurrency group keyed on =head_ref || ref= with =cancel-in-progress: true= (dedups push-vs-PR double runs)
+
+** Changed
+
+- =package.json= — version bumped from =0.1.0= to =0.3.0=
+- =README.org= — =#+VERSION:=, ASCII logo footer, and shields.io badge all bumped to =v0.3=
+- =vite.config.js= — now injects =__APP_VERSION__= from =package.json= at build time and hosts the Vitest config block
+- =eslint.config.mjs= — declares =__APP_VERSION__= as a readonly global; registers Vitest globals (=describe=, =it=, =test=, =expect=, =beforeEach=, =afterEach=, =beforeAll=, =afterAll=, =vi=) on =*.test.{js,mjs}= / =*.spec.{js,mjs}= / =__tests__/**=
+- =.gitignore= — re-organized by concern; secret-file extension bans added; =!.env.example= negation lets the template stay tracked; =package-lock.json= now tracked for reproducible =npm ci=
+- =.github/PULL_REQUEST_TEMPLATE.md= — structured layout with 13 embedded format rules (section ordering, Changes-list tag vocabulary, bold-italic colon labels, Testing Coverage two-table format, closed media-type vocab for Documentation)
+
+** Removed
+
+- =src/shared/components/audio-visualizer.vue= — superseded by the =audio-meter= widget
+
+** Decided
+
+- *Audio pipeline:* =InputVolumeMeters= event, not =getUserMedia=. Web Audio API does not work reliably inside CEF browser sources; OBS gives mixer-accurate levels.
+- *Audio input default:* =Mic/Aux=. Desktop Audio yields zeroes and browser-source audio yields empty levels arrays.
+- *Audio peak extraction:* =inputLevelsMul[ch][1]=, amplified 8× to fill the 0-255 visualizer scale.
+- *Reactivity:* =ref= with a new array assignment per frame for v-for props. =shallowRef= + =triggerRef= does not propagate across the props boundary to child re-renders.
+- *WebSocket:* =useObsWebsocket= is a module-level singleton — one connection shared by every composable and component.
+- *Event subscription:* =EventSubscription.All | EventSubscription.InputVolumeMeters= must be explicitly opted in at connect time (high-volume channel).
+- *Take counter:* resets per browser-source refresh (predictable per-session state).
+- *Overlay description schema:* splits WHAT (=description=) from WHEN (=use_cases[]= keywords) from technical prereqs (=requires[]=). No em dashes anywhere in prose fields.
+- *Widget vs component split:* =src/shared/widgets/= holds brand-agnostic drop-ins; =src/shared/components/= keeps primitives that still need wiring by the consumer.
+- *Trigger protocol:* =postMessage= is dev-only; production triggers come from OBS WebSocket events consumed via the existing composables.
+- *Brand theming:* CSS custom properties (=--clr-primary-*=). Components never reference SASS variables directly.
+- *Version pipeline:* =package.json= is the canonical source; Vite =define= injects =__APP_VERSION__=; =src/shared/version.js= derives =VERSION_TAG=. Bump =package.json= and the UI follows.
+- *Test runner:* Vitest over Jest — reuses Vite's plugin and transform pipeline with zero extra config.
+- *DOM environment:* =happy-dom= over =jsdom= — significantly faster for the UI-adjacent unit tests; default Vitest recommendation.
+- *CI label strategy:* a single aggregator job at the end of the workflow reads each gate's result via =needs:= and toggles the =Pre-Check Failed= label atomically, rather than adding label-flipping steps to each job.
 
 * [v0.1] — 2026-04-13 :: Brand Bootstrap
 ** Added
@@ -23,7 +131,7 @@
 - =eslint.config.mjs= — CCS code standards adapted for browser JS
 - =package.json= — =@kyonax/reckit= with SPDX =(MPL-2.0 OR Apache-2.0)=
 - =.github/workflows/ci.yml= — ESLint, security scan, license headers, protected files
-- =.github/workflows/release.yml= — CHANGELOG + version gate on dev → master PRs
+- =.github/workflows/release.yml= — CHANGELOG + version gate on =dev= into =master= PRs
 - =.github/CODEOWNERS= — all changes require =@Kyonax= review
 - =.github/SECURITY.org= — banned patterns reference
 - =.github/PULL_REQUEST_TEMPLATE.md= — PR checklist

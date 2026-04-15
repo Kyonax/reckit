@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+ */
+
+@use "variables" as *;
+@use "mixins" as *;
+
+:root {
+	@each $color, $shades in $colors {
+		@each $shade, $value in $shades {
+			--clr-#{$color}-#{$shade}: #{$value};
+		}
+	}
+
+	@each $screen-size, $font-size in $typo-scale {
+		@if $screen-size == small {
+			@each $size, $value in $font-size {
+				--fs-#{$size}: #{$value};
+			}
+		} @else if $screen-size == medium {
+			@include min-media-query(md) {
+				@each $size, $value in $font-size {
+					--fs-#{$size}: #{$value};
+				}
+			}
+		} @else if $screen-size == large {
+			@include min-media-query(lg) {
+				@each $size, $value in $font-size {
+					--fs-#{$size}: #{$value};
+				}
+			}
+		}
+	}
+
+	--font-mono: "SpaceMono", "Roboto Mono", "Courier New", Courier, monospace;
+
+	--canvas-width: 1920px;
+	--canvas-height: 1080px;
+	--hud-bar-offset: 24px;
+	--hud-bar-gap: 24px;
+}
+
+::selection {
+	background-color: var(--clr-primary-100);
+	color: var(--clr-neutral-500);
+}
+
+::-moz-selection {
+	background-color: var(--clr-primary-100);
+	color: var(--clr-neutral-500);
+}
+
+.cyberpunk-glow {
+	@include cyberpunk-glow(
+		var(--cyberpunk-glow-color, var(--clr-primary-100)),
+		var(--cyberpunk-glow-blur, 1px),
+		var(--cyberpunk-glow-spread, 9px),
+		true,
+		var(--cyberpunk-glow-speed, 1.5s)
+	);
+}
