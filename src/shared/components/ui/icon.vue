@@ -3,19 +3,30 @@
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
 
-  svg-icon — renders an SVG file from shared/assets/svg by name.
-  Uses Vite import.meta.glob with ?raw to inline SVGs at build
-  time. Color inherits from CSS via currentColor in the SVG source.
+  ui-icon — renders an SVG by name, resolved from two pools:
+    1. src/shared/assets/svg/*.svg       (project-wide primitives)
+    2. /@<brand>/assets/svg/*.svg        (any brand's private SVGs)
+
+  Both pools are scanned via import.meta.glob with ?raw, inlined
+  at build time. Color inherits via `currentColor` in the SVG
+  source. Brand SVGs override shared SVGs on filename collision —
+  useful when a brand wants a brand-flavored version of a shared
+  primitive (e.g. a branded corner-bracket). Cross-brand filename
+  collisions (two brands sharing a filename) produce last-loaded-
+  wins; avoid by prefixing brand-specific SVGs with a unique name.
 
   Props:
-    name — filename without extension (e.g. "corner-bracket")
-    size — optional width/height in pixels. Omit to let CSS control sizing.
+    name  — filename without extension (e.g. "corner-bracket").
+    label — optional accessible label. When set, renders with
+            role="img" + aria-label; otherwise aria-hidden.
+    size  — optional width/height in pixels. Omit to let CSS
+            control sizing.
 -->
 
 <template>
   <span
     v-if="svg_content"
-    class="svg-icon"
+    class="ui-icon"
     :role="label ? 'img' : undefined"
     :aria-label="label || undefined"
     :aria-hidden="label ? undefined : 'true'"
@@ -27,13 +38,21 @@
 <script setup>
 import { computed } from 'vue';
 
-const svg_modules = import.meta.glob(
+const shared_svg = import.meta.glob(
   '@shared/assets/svg/*.svg',
   { eager: true, query: '?raw', import: 'default' },
 );
 
+const brand_svg = import.meta.glob(
+  '/@*/assets/svg/*.svg',
+  { eager: true, query: '?raw', import: 'default' },
+);
+
 const svg_map = Object.fromEntries(
-  Object.entries(svg_modules).map(([path, raw]) => {
+  [
+    ...Object.entries(shared_svg),
+    ...Object.entries(brand_svg),
+  ].map(([path, raw]) => {
     const filename = path.split('/').pop().replace('.svg', '');
     return [filename, raw];
   }),
@@ -71,14 +90,14 @@ const size_style = computed(() => {
 </script>
 
 <style scoped lang="scss">
-.svg-icon {
+.ui-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
 }
 
-.svg-icon :deep(svg) {
+.ui-icon :deep(svg) {
   width: 100%;
   height: 100%;
 }

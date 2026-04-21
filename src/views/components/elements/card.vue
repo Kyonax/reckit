@@ -36,7 +36,12 @@
     <header class="card-header">
       <span class="brand-tag">{{ overlay.brand }}</span>
       <h2 class="card-title">{{ overlay.name }}</h2>
-      <span class="status-badge">{{ overlay.status }}</span>
+      <UiBadge
+        class="card-status"
+        :variant="is_planned ? 'dim' : 'active'"
+      >
+        {{ overlay.status }}
+      </UiBadge>
     </header>
 
     <div class="card-description">
@@ -57,43 +62,31 @@
         class="card-use-case"
       >
         <span class="use-case-label">WHEN TO USE</span>
-        <ul class="use-case-tags">
-          <li
+        <div class="use-case-tags">
+          <UiChip
             v-for="(keyword, index) in visible_use_cases"
             :key="index"
-            class="use-case-tag"
           >
             {{ keyword }}
-          </li>
-          <li
+          </UiChip>
+          <UiChip
             v-if="extra_use_cases_count > 0"
-            class="use-case-tag use-case-overflow"
+            variant="overflow"
           >
             +{{ extra_use_cases_count }}
-          </li>
-        </ul>
+          </UiChip>
+        </div>
       </div>
     </div>
 
     <div class="card-spec-grid">
-      <div class="spec">
-        <span class="spec-label">SIZE</span>
-        <span class="spec-value">
-          {{ overlay.width }} × {{ overlay.height }}
-        </span>
-      </div>
-      <div class="spec">
-        <span class="spec-label">FPS</span>
-        <span class="spec-value">{{ overlay.fps }}</span>
-      </div>
-      <div class="spec">
-        <span class="spec-label">CACHE</span>
-        <span class="spec-value">DISABLE</span>
-      </div>
-      <div class="spec">
-        <span class="spec-label">CSS</span>
-        <span class="spec-value">CLEAR</span>
-      </div>
+      <UiDataPoint
+        label="SIZE"
+        :value="`${overlay.width} × ${overlay.height}`"
+      />
+      <UiDataPoint label="FPS" :value="overlay.fps" />
+      <UiDataPoint label="CACHE" value="DISABLE" />
+      <UiDataPoint label="CSS" value="CLEAR" />
     </div>
 
     <div class="card-url-row">
@@ -188,8 +181,11 @@
 <script setup>
 import DetailModal from '@modals/detail.vue';
 import PreviewModal from '@modals/preview.vue';
+import UiBadge from '@ui/badge.vue';
+import UiChip from '@ui/chip.vue';
+import UiDataPoint from '@ui/data-point.vue';
 import UiIcon from '@ui/icon.vue';
-import { parseEmphasis } from '@views/utils/parse-emphasis.js';
+import { parseEmphasis } from '@views/utils/markup.js';
 import { computed, ref } from 'vue';
 
 const COPIED_RESET_MS = 1500;
@@ -374,22 +370,9 @@ async function copyUrl() {
   min-width: 0;
 }
 
-.status-badge {
-  @include hud-label-base;
-  position: static;
+.card-status {
   grid-column: 2;
   grid-row: 1;
-  padding: 0.25em 0.65em;
-  font-size: var(--fs-150);
-  border: 1px solid var(--clr-primary-100);
-  color: var(--clr-primary-100);
-  letter-spacing: 0.18em;
-  white-space: nowrap;
-}
-
-.is-planned .status-badge {
-  border-color: var(--clr-neutral-200);
-  color: var(--clr-neutral-200);
 }
 
 .card-description {
@@ -433,29 +416,9 @@ async function copyUrl() {
 }
 
 .use-case-tags {
-  list-style: none;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4em;
-  padding: 0;
-  margin: 0;
-}
-
-.use-case-tag {
-  padding: 0.25em 0.6em;
-  font-family: var(--font-mono);
-  font-size: var(--fs-175);
-  letter-spacing: 0.1em;
-  color: var(--clr-primary-100);
-  background: rgba(255, 215, 0, 0.06);
-  border: 1px solid var(--clr-border-100);
-  text-transform: lowercase;
-  white-space: nowrap;
-}
-
-.use-case-overflow {
-  opacity: 0.5;
-  border-style: dashed;
 }
 
 .card-spec-grid {
@@ -465,31 +428,6 @@ async function copyUrl() {
   padding: 0.85em 0;
   border-top: 1px solid var(--clr-border-100);
   border-bottom: 1px solid var(--clr-border-100);
-}
-
-.spec {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2em;
-  min-width: 0;
-}
-
-.spec-label {
-  @include hud-label-base;
-  position: static;
-  font-size: var(--fs-150);
-  letter-spacing: 0.18em;
-  opacity: 0.5;
-}
-
-.spec-value {
-  font-family: var(--font-mono);
-  font-size: var(--fs-300);
-  color: var(--clr-primary-100);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .card-url-row {

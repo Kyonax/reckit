@@ -12,7 +12,7 @@
 <template>
   <div class="home-bg">
     <div class="home">
-      <MetaSection
+      <StatsSection
         :overlay_count="overlay_count"
         :brand_count="brand_count"
         :ready_count="ready_count"
@@ -31,9 +31,9 @@
 <script setup>
 import FooterSection from '@sections/footer.vue';
 import HeroSection from '@sections/hero.vue';
-import MetaSection from '@sections/meta.vue';
 import SetupSection from '@sections/setup.vue';
 import SourcesSection from '@sections/sources.vue';
+import StatsSection from '@sections/stats.vue';
 import { SOURCES } from '@shared/brand-loader.js';
 import { computed } from 'vue';
 

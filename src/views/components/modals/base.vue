@@ -3,8 +3,10 @@
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
 
-  base-modal — reusable modal shell with backdrop, ESC close,
-  fade transition, and named slots for header/body/footer.
+  base — reusable modal shell with backdrop, ESC close, fade
+  transition, and named slots for header/body/footer. Composed
+  by preview.vue + detail.vue; never used directly from a view.
+  Binding: <BaseModal> (alias @modals/ already supplies "modal").
 -->
 
 <template>

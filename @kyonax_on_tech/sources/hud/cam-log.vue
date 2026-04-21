@@ -75,8 +75,8 @@ import HudFrame from '@hud/frame.vue';
 import HudTimer from '@hud/timer.vue';
 import { getBrand } from '@shared/brand-loader.js';
 import { VERSION_TAG } from '@shared/version.js';
-import AudioMeter from '@widgets/audio-meter.vue';
-import LiveReadout from '@widgets/live-readout.vue';
+import AudioMeter from '@widgets/hud/audio-meter.vue';
+import LiveReadout from '@widgets/ui/live-readout.vue';
 import { computed, ref } from 'vue';
 
 const brand = getBrand('@kyonax_on_tech');

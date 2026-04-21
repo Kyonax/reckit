@@ -19,9 +19,11 @@ const source_modules = import.meta.glob(
   { eager: true, import: 'default' },
 );
 
-const hud_components = import.meta.glob('/@*/hud/*.vue');
-const animation_components = import.meta.glob('/@*/animation/*.vue');
-const scene_components = import.meta.glob('/@*/scene/*.vue');
+const hud_components = import.meta.glob('/@*/sources/hud/*.vue');
+const animation_components = import.meta.glob(
+  '/@*/sources/animation/*.vue',
+);
+const scene_components = import.meta.glob('/@*/sources/scene/*.vue');
 
 export const BRANDS = Object.values(brand_modules);
 export const SOURCES = Object.values(source_modules).flat();
@@ -51,7 +53,7 @@ export function resolveComponent(source) {
     return null;
   }
 
-  const key = `/${source.brand}/${source.type}/${source.id}.vue`;
+  const key = `/${source.brand}/sources/${source.type}/${source.id}.vue`;
 
   return components[key] || null;
 }

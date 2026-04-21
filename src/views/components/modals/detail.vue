@@ -17,12 +17,11 @@
     <template #header>
       <span class="detail-brand">{{ overlay.brand }}</span>
       <span class="detail-title">{{ overlay.name }}</span>
-      <span
-        class="detail-status"
-        :class="{ 'is-planned': overlay.status === 'planned' }"
+      <UiBadge
+        :variant="overlay.status === 'planned' ? 'dim' : 'active'"
       >
         {{ overlay.status }}
-      </span>
+      </UiBadge>
     </template>
 
     <div class="detail-content">
@@ -47,38 +46,26 @@
         class="detail-section"
       >
         <span class="detail-label">USE CASES</span>
-        <ul class="detail-tags">
-          <li
+        <div class="detail-tags">
+          <UiChip
             v-for="(keyword, index) in overlay.use_cases"
             :key="index"
-            class="detail-tag"
           >
             {{ keyword }}
-          </li>
-        </ul>
+          </UiChip>
+        </div>
       </section>
 
       <section class="detail-section">
         <span class="detail-label">SPECS</span>
         <div class="detail-spec-grid">
-          <div class="detail-spec">
-            <span class="spec-key">SIZE</span>
-            <span class="spec-val">
-              {{ overlay.width }} × {{ overlay.height }}
-            </span>
-          </div>
-          <div class="detail-spec">
-            <span class="spec-key">FPS</span>
-            <span class="spec-val">{{ overlay.fps }}</span>
-          </div>
-          <div class="detail-spec">
-            <span class="spec-key">CACHE</span>
-            <span class="spec-val">DISABLE</span>
-          </div>
-          <div class="detail-spec">
-            <span class="spec-key">CSS</span>
-            <span class="spec-val">CLEAR</span>
-          </div>
+          <UiDataPoint
+            label="SIZE"
+            :value="`${overlay.width} × ${overlay.height}`"
+          />
+          <UiDataPoint label="FPS" :value="overlay.fps" />
+          <UiDataPoint label="CACHE" value="DISABLE" />
+          <UiDataPoint label="CSS" value="CLEAR" />
         </div>
       </section>
 
@@ -102,7 +89,10 @@
 
 <script setup>
 import BaseModal from '@modals/base.vue';
-import { parseEmphasis } from '@views/utils/parse-emphasis.js';
+import UiBadge from '@ui/badge.vue';
+import UiChip from '@ui/chip.vue';
+import UiDataPoint from '@ui/data-point.vue';
+import { parseEmphasis } from '@views/utils/markup.js';
 import { computed } from 'vue';
 
 const MODAL_WIDTH = 'min(720px, calc(100vw - 4em))';
@@ -149,22 +139,6 @@ const description_segments = computed(() => {
   letter-spacing: 0.05em;
 }
 
-.detail-status {
-  @include hud-label-base;
-  position: static;
-  padding: 0.25em 0.65em;
-  font-size: var(--fs-150);
-  border: 1px solid var(--clr-primary-100);
-  color: var(--clr-primary-100);
-  letter-spacing: 0.18em;
-  white-space: nowrap;
-}
-
-.detail-status.is-planned {
-  border-color: var(--clr-neutral-200);
-  color: var(--clr-neutral-200);
-}
-
 .detail-section {
   padding: 1.25em 0;
   border-top: 1px dashed var(--clr-border-100);
@@ -202,51 +176,15 @@ const description_segments = computed(() => {
 }
 
 .detail-tags {
-  list-style: none;
   display: flex;
   flex-wrap: wrap;
   gap: 0.4em;
-  padding: 0;
-  margin: 0;
-}
-
-.detail-tag {
-  padding: 0.25em 0.6em;
-  font-family: var(--font-mono);
-  font-size: var(--fs-175);
-  letter-spacing: 0.1em;
-  color: var(--clr-primary-100);
-  background: rgba(255, 215, 0, 0.06);
-  border: 1px solid var(--clr-border-100);
-  text-transform: lowercase;
-  white-space: nowrap;
 }
 
 .detail-spec-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75em 1em;
-}
-
-.detail-spec {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2em;
-}
-
-.spec-key {
-  @include hud-label-base;
-  position: static;
-  font-size: var(--fs-150);
-  letter-spacing: 0.18em;
-  opacity: 0.5;
-}
-
-.spec-val {
-  font-family: var(--font-mono);
-  font-size: var(--fs-300);
-  color: var(--clr-primary-100);
-  font-variant-numeric: tabular-nums;
 }
 
 .detail-requires {

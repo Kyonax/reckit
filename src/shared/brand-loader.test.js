@@ -57,10 +57,17 @@ describe('Brand loader — BRANDS', () => {
   );
 
   it.each(BRANDS)(
-    'brand $handle has colors object',
+    'brand $handle has links object',
     (brand) => {
-      expect(brand).toHaveProperty('colors');
-      expect(typeof brand.colors).toBe('object');
+      expect(brand).toHaveProperty('links');
+      expect(typeof brand.links).toBe('object');
+    },
+  );
+
+  it.each(BRANDS)(
+    'brand $handle does NOT carry a colors field (theme lives in styles/_theme.scss)',
+    (brand) => {
+      expect(brand.colors).toBeUndefined();
     },
   );
 
