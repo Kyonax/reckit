@@ -3,14 +3,14 @@
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
 
-  cam-person — Cyberpunk HUD overlay for webcam (camera to person).
+  cam-log — Cyberpunk HUD overlay for webcam (camera to person).
   Renders on top of a Video Capture source in OBS.
   Transparent background — webcam shows through.
 -->
 
 <template>
-  <div class="cam-person-overlay">
-    <hud-frame
+  <div class="cam-log-overlay">
+    <HudFrame
       :width="CANVAS_WIDTH"
       :height="CANVAS_HEIGHT"
       :labels="hud_labels"
@@ -19,10 +19,10 @@
       <span class="hud-label rec-frame">REC FRAME</span>
       <span class="hud-label cam-online">CAM ONLINE</span>
 
-      <!-- Bottom-left: identity block -->
+      <!-- Bottom-left: identity block (from brand.js) -->
       <div class="identity-block">
-        <span class="identity-name">Cristian D. Moreno</span>
-        <span class="identity-handle">@kyonax_on_tech</span>
+        <span class="identity-name">{{ brand.identity.author }}</span>
+        <span class="identity-handle">{{ brand.identity.display_handle }}</span>
       </div>
 
       <!-- Bottom-right: toolkit identity -->
@@ -36,12 +36,12 @@
 
       <!-- Bottom status bar -->
       <div class="status-bar">
-        <recording-timer
+        <HudTimer
           :is_recording="is_recording"
           :elapsed_time="elapsed_time"
         />
 
-        <audio-meter
+        <AudioMeter
           :obs="obs"
           source_name="Mic/Aux"
           @update:state="audio_state = $event"
@@ -58,30 +58,28 @@
 
       <!-- Diagnostic readout -->
       <div class="debug-info">
-        <live-readout
+        <LiveReadout
           :text="debug_text"
           :refresh_ms="DEBUG_REFRESH_MS"
         />
       </div>
-    </hud-frame>
+    </HudFrame>
   </div>
 </template>
 
 <script setup>
+import { useObsWebsocket } from '@composables/use-obs-websocket.js';
+import { useRecordingStatus } from '@composables/use-recording-status.js';
+import { useSceneName } from '@composables/use-scene-name.js';
+import HudFrame from '@hud/frame.vue';
+import HudTimer from '@hud/timer.vue';
+import { getBrand } from '@shared/brand-loader.js';
+import { VERSION_TAG } from '@shared/version.js';
+import AudioMeter from '@widgets/hud/audio-meter.vue';
+import LiveReadout from '@widgets/ui/live-readout.vue';
 import { computed, ref } from 'vue';
 
-import HudFrame from '../../shared/components/hud-frame.vue';
-import RecordingTimer
-  from '../../shared/components/recording-timer.vue';
-import { useObsWebsocket }
-  from '../../shared/composables/use-obs-websocket.js';
-import { useRecordingStatus }
-  from '../../shared/composables/use-recording-status.js';
-import { useSceneName }
-  from '../../shared/composables/use-scene-name.js';
-import { VERSION_TAG } from '../../shared/version.js';
-import AudioMeter from '../../shared/widgets/audio-meter.vue';
-import LiveReadout from '../../shared/widgets/live-readout.vue';
+const brand = getBrand('@kyonax_on_tech');
 
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
@@ -130,9 +128,9 @@ const debug_text = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@use "../../app/scss/abstracts/mixins" as *;
+@use "@app/scss/abstracts/mixins" as *;
 
-.cam-person-overlay {
+.cam-log-overlay {
   width: var(--canvas-width);
   height: var(--canvas-height);
   position: relative;

@@ -8,9 +8,8 @@
  * into VERSION_TAG correctly.
  */
 
+import { VERSION, VERSION_TAG } from '@shared/version.js';
 import { describe, expect, it } from 'vitest';
-
-import { VERSION, VERSION_TAG } from './version.js';
 
 describe('version', () => {
   it('exposes a valid semver string from package.json', () => {

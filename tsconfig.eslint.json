@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "paths": {
+      "@shared/*": ["src/shared/*"],
+      "@views/*": ["src/views/*"],
+      "@app/*": ["src/app/*"],
+      "@assets/*": [".github/assets/*"]
+    }
+  },
+  "include": ["src/**/*.js", "src/**/*.mjs", "src/**/*.vue", "@*/**/*.js", "@*/**/*.vue", "eslint.config.mjs", "vite.config.js"]
+}

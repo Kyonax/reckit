@@ -1,9 +1,42 @@
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __         __       _    __
+#  / /_/ /  ___   / /  ____(_)__/ /__ ____
+# / __/ _ \/ -_) / _ \/ __/ / _  / _ `/ -_)
+# \__/_//_/\__/ /_.__/_/ /_/\_,_/\_, /\__/
+#                               /___/
+#
+# README.org — Project landing page on GitHub
+# 2026-04-17
+#
+# First thing visitors and contributors see. Rendered by
+# GitHub as the repo homepage. Contains the ASCII logo,
+# badges, project description, and contributing info.
+#
+#   ASCII logo (centered table)
+#   Badges (shields.io)
+#   What is RECKIT?
+#   Setup
+#   Contributing
+#
+# Guidelines:
+#   ASCII centering: <table align="center"> inside <div align="left">
+#   Badges: extension-less SVG URLs only, flat-square style
+#   Custom logos: hardcode fill color in SVG before base64
+#   Version: #+VERSION:, logo footer, badge must all match
+#   Minimal README style, no verbose docs here
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
+
 #+AUTHOR: [[https://orcid.org/0009-0006-4459-5538][Cristian D. Moreno - Kyonax]]
 #+EMAIL: kyonax.corp@gmail.com
 #+DATE: Apr 13, 2026
 #+FILETAGS: :KYO:RECKIT:OBS:AUTOMATION:CONTENT:
 #+VERSION: v0.3
-#+LAST_UPDATE: Apr 13, 2026
+#+LAST_UPDATE: Apr 17, 2026
 
 #+BEGIN_HTML
 <div align="left">
@@ -66,9 +99,41 @@ reckit/
   ...
 #+END_EXAMPLE
 
+#+BEGIN_QUOTE
+*NOTE:* This is a Personal project. RECKIT exists to solve a specific problem for its author. It is not designed as a general-purpose tool, and there are no current plans to make it one. If the idea proves feasible and there is genuine community interest, it may evolve into something broader, but for now the scope is intentionally personal. If you find it useful, feel free to download and adapt it to your own setup.
+#+END_QUOTE
+
+** SETUP
+
+#+BEGIN_SRC bash
+git clone https://github.com/Kyonax/reckit.git
+cd reckit
+npm ci
+cp .env.example .env    # fill in your OBS WebSocket values
+npm run dev             # http://localhost:5173/
+#+END_SRC
+
+Requires *Node.js >=20* and npm. OBS Studio with WebSocket (port 4455) is only needed for testing overlays live.
+
+| Script        | Purpose                 |
+|---------------+-------------------------|
+| =npm run dev=   | Vite dev server on 5173 |
+| =npm run lint=  | ESLint check            |
+| =npm run test=  | Vitest suite            |
+| =npm run build= | Production bundle       |
+
 ** CONTRIBUTING
-This project is dual-licensed under the [[file:LICENSE][MPL-2.0]] and [[file:LICENSE-APACHE][Apache-2.0]] licenses. See [[file:LICENSING.org][LICENSING.org]] for which applies to each file and how to add headers. The [[file:NOTICE][NOTICE]] file must be included in all redistributions.
 
-For information on reporting security vulnerabilities or banned code patterns, see [[file:.github/SECURITY.org][SECURITY.org]].
+See [[file:CONTRIBUTING.org][CONTRIBUTING.org]] for the full guide: prerequisites, code conventions, branch workflow, CI pipeline, and PR process.
 
-Code style follows [[https://github.com/ccs-devhub][CCS]] standards, enforced via [[file:eslint.config.mjs][eslint.config.mjs]]. All changes require review from =@Kyonax= (see [[file:.github/CODEOWNERS][CODEOWNERS]]). Version history is tracked in [[file:CHANGELOG.org][CHANGELOG.org]].
+Quick summary:
+
+- Code style follows [[https://github.com/ccs-devhub][CCS]] standards, enforced via [[file:eslint.config.mjs][eslint.config.mjs]]
+- =snake_case= variables, =camelCase= functions, =UPPER_CASE= constants, =PascalCase= classes
+- Vue 3 Composition API with =<script setup>= only
+- Every source file needs the MPL-2.0 license header
+- All changes require review from =@Kyonax= ([[file:.github/CODEOWNERS][CODEOWNERS]])
+- Branch model: =master= <- =dev= <- =feat-*= / =fix-*=
+- All PRs must pass 6 CI checks before merge
+
+Dual-licensed under [[file:LICENSE][MPL-2.0]] and [[file:LICENSE-APACHE][Apache-2.0]]. See [[file:LICENSING.org][LICENSING.org]] for details. Security rules at [[file:.github/SECURITY.org][SECURITY.org]]. Version history at [[file:CHANGELOG.org][CHANGELOG.org]].
