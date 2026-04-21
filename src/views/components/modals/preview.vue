@@ -10,83 +10,69 @@
 -->
 
 <template>
-  <Teleport to="body">
-    <transition name="fade">
+  <BaseModal
+    :is_open="is_open"
+    @close="close"
+  >
+    <template #header>
+      <span class="modal-brand">{{ overlay.brand }}</span>
+      <span class="modal-title">{{ overlay.name }}</span>
+      <span class="modal-spec">
+        {{ overlay.width }} × {{ overlay.height }} @ {{ overlay.fps }}
+      </span>
+    </template>
+
+    <div class="modal-stage">
       <div
-        v-if="is_open"
-        class="modal-backdrop"
-        @click.self="close"
+        ref="stage_el"
+        class="stage-inner"
+        :style="aspect_style"
       >
-        <div class="modal">
-          <header class="modal-header">
-            <span class="modal-brand">{{ overlay.brand }}</span>
-            <span class="modal-title">{{ overlay.name }}</span>
-            <span class="modal-spec">
-              {{ overlay.width }} × {{ overlay.height }} @ {{ overlay.fps }}
-            </span>
-            <button
-              type="button"
-              class="modal-close"
-              aria-label="Close preview"
-              @click="close"
-            >
-              ×
-            </button>
-          </header>
-
-          <div class="modal-stage">
-            <div
-              ref="stage_el"
-              class="stage-inner"
-              :style="aspect_style"
-            >
-              <iframe
-                ref="iframe_ref"
-                class="modal-iframe"
-                :src="full_url"
-                :style="iframe_size_style"
-                :title="`${overlay.name} preview`"
-                @load="onIframeLoad"
-              />
-            </div>
-          </div>
-
-          <footer class="modal-actions">
-            <button
-              type="button"
-              class="action-button reload-button"
-              title="Reload the iframe"
-              @click="reload"
-            >
-              <span class="action-icon">↻</span>
-              <span class="action-label">RELOAD</span>
-            </button>
-
-            <template v-if="has_triggers">
-              <span class="actions-divider" />
-              <span class="actions-label">TRIGGERS</span>
-              <div class="actions-row">
-                <button
-                  v-for="trigger in overlay.triggers"
-                  :key="trigger.id"
-                  type="button"
-                  class="action-button"
-                  :title="trigger.description"
-                  @click="fire(trigger)"
-                >
-                  <span class="action-icon">●</span>
-                  <span class="action-label">{{ trigger.label }}</span>
-                </button>
-              </div>
-            </template>
-          </footer>
-        </div>
+        <iframe
+          ref="iframe_ref"
+          class="modal-iframe"
+          :src="full_url"
+          :style="iframe_size_style"
+          :title="`${overlay.name} preview`"
+          @load="onIframeLoad"
+        />
       </div>
-    </transition>
-  </Teleport>
+    </div>
+
+    <template #footer>
+      <button
+        type="button"
+        class="action-button reload-button"
+        title="Reload the iframe"
+        @click="reload"
+      >
+        <span class="action-icon">↻</span>
+        <span class="action-label">RELOAD</span>
+      </button>
+
+      <template v-if="has_triggers">
+        <span class="actions-divider" />
+        <span class="actions-label">TRIGGERS</span>
+        <div class="actions-row">
+          <button
+            v-for="trigger in overlay.triggers"
+            :key="trigger.id"
+            type="button"
+            class="action-button"
+            :title="trigger.description"
+            @click="fire(trigger)"
+          >
+            <span class="action-icon">●</span>
+            <span class="action-label">{{ trigger.label }}</span>
+          </button>
+        </div>
+      </template>
+    </template>
+  </BaseModal>
 </template>
 
 <script setup>
+import BaseModal from '@modals/base.vue';
 import {
   computed, nextTick, onMounted, onUnmounted, ref, watch,
 } from 'vue';
@@ -194,12 +180,6 @@ function onIframeLoad() {
   }
 }
 
-function handleKeydown(event) {
-  if (event.key === 'Escape' && props.is_open) {
-    close();
-  }
-}
-
 watch(() => props.is_open, async (open) => {
   if (!open) {
     return;
@@ -210,49 +190,16 @@ watch(() => props.is_open, async (open) => {
 });
 
 onMounted(() => {
-  window.addEventListener('keydown', handleKeydown);
   window.addEventListener('resize', applyScale);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('resize', applyScale);
 });
 </script>
 
 <style scoped lang="scss">
-@use "../../app/scss/abstracts/mixins" as *;
-
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 2em;
-}
-
-.modal {
-  display: flex;
-  flex-direction: column;
-  width: min(1100px, calc(100vw - 4em));
-  background: var(--clr-neutral-500);
-  border: 1px solid var(--clr-primary-300);
-  max-height: calc(100vh - 4em);
-  overflow: hidden;
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 1em;
-  padding: 0.75em 1.25em;
-  border-bottom: 1px solid var(--clr-border-100);
-}
+@use "@app/scss/abstracts/mixins" as *;
 
 .modal-brand {
   @include hud-label-base;
@@ -277,27 +224,6 @@ onUnmounted(() => {
   font-size: var(--fs-175);
   letter-spacing: 0.2em;
   color: var(--clr-neutral-200);
-  margin-left: auto;
-}
-
-.modal-close {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2em;
-  height: 2em;
-  font-size: var(--fs-525);
-  line-height: 1;
-  color: var(--clr-neutral-100);
-  border: 1px solid var(--clr-border-100);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
-}
-
-.modal-close:hover {
-  color: var(--clr-primary-100);
-  border-color: var(--clr-primary-100);
 }
 
 .modal-stage {
@@ -320,14 +246,6 @@ onUnmounted(() => {
   background: transparent;
   transform: scale(var(--iframe-scale, 0.5));
   transform-origin: top left;
-}
-
-.modal-actions {
-  display: flex;
-  align-items: center;
-  gap: 1em;
-  padding: 0.75em 1.25em;
-  border-top: 1px solid var(--clr-border-100);
 }
 
 .actions-divider {
@@ -381,15 +299,5 @@ onUnmounted(() => {
 .reload-button .action-icon {
   font-size: 1.1em;
   line-height: 1;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

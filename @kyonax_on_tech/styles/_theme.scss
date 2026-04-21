@@ -1,0 +1,46 @@
+// Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+//
+// Brand theme for @kyonax_on_tech — gold + black cyberpunk palette.
+//
+// Single source of truth for this brand's visual palette. Auto-loaded
+// by src/main.js (eager glob over every brand's theme SCSS file).
+// Active whenever App.vue applies `class="brand-kyonax-on-tech"` —
+// which happens on any route whose meta.brand resolves to this brand
+// (see src/router.js + src/App.vue).
+//
+// Override any CSS custom property declared by src/app/scss/abstracts
+// by redeclaring it inside this class block. Unlisted variables fall
+// back to the global default from the project's :root scope.
+//
+// A new brand can copy this file, rename the class selector to
+// `.brand-<handle>` (with the @-sign stripped and underscores turned
+// into dashes), and tune any subset of variables it wants to override.
+
+.brand-kyonax-on-tech {
+  // ── Primary (gold) ──────────────────────────────────────────
+  --clr-primary-50: hsl(48, 95%, 78%);
+  --clr-primary-100: hsl(47, 95%, 56%);
+  --clr-primary-200: hsl(49, 100%, 39%);
+  --clr-primary-300: hsl(48, 100%, 29%);
+  --clr-primary-400: hsl(45, 100%, 20%);
+  --clr-primary-500: hsl(35, 100%, 13%);
+
+  // ── Secondary (blue accent) ─────────────────────────────────
+  --clr-secondary-50: hsl(224, 95%, 78%);
+  --clr-secondary-100: hsl(224, 95%, 56%);
+  --clr-secondary-200: hsl(224, 74%, 45%);
+
+  // ── Neutrals (black → white) ────────────────────────────────
+  --clr-neutral-50: hsl(0, 0%, 95%);
+  --clr-neutral-100: hsl(0, 0%, 85%);
+  --clr-neutral-200: hsl(0, 0%, 65%);
+  --clr-neutral-300: hsl(0, 0%, 45%);
+  --clr-neutral-400: hsl(0, 0%, 25%);
+  --clr-neutral-500: hsl(0, 0%, 0%);
+
+  // ── Status colors ────────────────────────────────────────────
+  --clr-error-100: hsl(352, 69%, 48%);
+  --clr-success-100: hsl(91, 62%, 44%);
+}

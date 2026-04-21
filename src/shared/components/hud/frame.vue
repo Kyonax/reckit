@@ -12,10 +12,26 @@
       height: `${height}px`,
     }"
   >
-    <corner-bracket position="top-left" :size="bracket_size" />
-    <corner-bracket position="top-right" :size="bracket_size" />
-    <corner-bracket position="bottom-left" :size="bracket_size" />
-    <corner-bracket position="bottom-right" :size="bracket_size" />
+    <UiIcon
+      name="corner-bracket"
+      :size="bracket_size"
+      class="bracket top-left"
+    />
+    <UiIcon
+      name="corner-bracket"
+      :size="bracket_size"
+      class="bracket top-right"
+    />
+    <UiIcon
+      name="corner-bracket"
+      :size="bracket_size"
+      class="bracket bottom-left"
+    />
+    <UiIcon
+      name="corner-bracket"
+      :size="bracket_size"
+      class="bracket bottom-right"
+    />
 
     <div class="border-top" />
     <div class="border-bottom" />
@@ -52,7 +68,7 @@
 </template>
 
 <script setup>
-import CornerBracket from './corner-bracket.vue';
+import UiIcon from '@ui/icon.vue';
 
 const BRACKET_SIZE = 40;
 
@@ -77,12 +93,22 @@ defineProps({
 </script>
 
 <style scoped lang="scss">
-@use "../../app/scss/abstracts/mixins" as *;
+@use "@app/scss/abstracts/mixins" as *;
 
 .hud-frame {
   position: relative;
   background: transparent;
 }
+
+.bracket {
+  position: absolute;
+  color: var(--clr-neutral-50);
+}
+
+.bracket.top-left { top: 0; left: 0; }
+.bracket.top-right { top: 0; right: 0; transform: scaleX(-1); }
+.bracket.bottom-left { bottom: 0; left: 0; transform: scaleY(-1); }
+.bracket.bottom-right { bottom: 0; right: 0; transform: scale(-1); }
 
 .border-top,
 .border-bottom,

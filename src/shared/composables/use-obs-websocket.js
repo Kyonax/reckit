@@ -4,10 +4,9 @@
  * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
  */
 
+import { OBS_CONFIG } from '@shared/config.js';
 import OBSWebSocket, { EventSubscription } from 'obs-websocket-js';
 import { ref } from 'vue';
-
-import { OBS_CONFIG } from '../config.js';
 
 const RECONNECT_DELAY = 5000;
 

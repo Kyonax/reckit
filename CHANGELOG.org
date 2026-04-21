@@ -1,9 +1,39 @@
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __         __
+#  / /_/ /  ___   / /__  ___ ____
+# / __/ _ \/ -_) / / _ \/ _ `(_-<
+# \__/_//_/\__/ /_/\___/\_, /___/
+#                      /___/
+#
+# CHANGELOG.org — Release history and pending work
+# 2026-04-17
+#
+# Tracks every version, decisions made, and the TODO backlog.
+# Each release follows: * [vX.Y] — YYYY-MM-DD :: Short Title
+#
+#   [TODO] — Bugs, features, infrastructure
+#   [Unreleased]
+#   [v0.3] — Vue App + CAM-LOG Overlay + Landing Index
+#   [v0.1] — Brand Bootstrap
+#
+# Guidelines:
+#   Entries: *Summary:* hook, *** sub-grouped Added/Changed/Removed/Decided
+#   Decided items: bolded title with rationale
+#   No arrows, no emojis, no private-file references
+#   Bare facts only, decisions carry rationale
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
+
 #+TITLE: RECKIT Changelog
 #+AUTHOR: [[https://orcid.org/0009-0006-4459-5538][Cristian D. Moreno - Kyonax]]
 #+EMAIL: kyonax.corp@gmail.com
 #+DATE: Apr 13, 2026
 #+FILETAGS: :KYO:RECKIT:CHANGELOG:
-#+LAST_UPDATE: Apr 15, 2026
+#+LAST_UPDATE: Apr 17, 2026
 #+OPTIONS: toc:nil num:nil H:4
 
 * [TODO]
@@ -60,7 +90,7 @@
 
 *** Overlays
 - =src/shared/data/overlays.js= — overlay registry schema (=id=, =brand=, =name=, =description=, =use_cases[]=, =path=, dimensions, =requires[]=, =triggers[]=, =status=)
-- =src/brands/kyonax-on-tech/cam-person.vue= — CAM-LOG HUD at =/@kyonax_on_tech/cam-person=
+- =src/brands/kyonax-on-tech/cam-log.vue= — CAM-LOG HUD at =/@kyonax_on_tech/cam-log=
   - Dynamic =SES::<scene>::T<NN>= label driven by scene + take counter
   - Recording timer (REC text + dot red while recording; MODE + time stay white)
   - =<audio-meter>= bound to =Mic/Aux=

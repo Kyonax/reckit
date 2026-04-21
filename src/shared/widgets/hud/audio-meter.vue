@@ -33,10 +33,9 @@
 </template>
 
 <script setup>
-import { watch } from 'vue';
-
 import { useAudioAnalyzer }
-  from '../composables/use-audio-analyzer.js';
+  from '@shared/composables/use-audio-analyzer.js';
+import { watch } from 'vue';
 
 const MAX_BAR_HEIGHT = 36;
 const MIN_BAR_HEIGHT = 2;

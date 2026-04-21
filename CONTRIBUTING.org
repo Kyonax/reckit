@@ -1,0 +1,175 @@
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __            __       _
+#  / /_/ /  ___   ___/ /__    (_)__
+# / __/ _ \/ -_) / _  / _ \  / / _ \
+# \__/_//_/\__/  \_,_/\___/_/ /\___/
+#                        |___/
+#
+# CONTRIBUTING.org — How to set up, develop, and contribute
+# 2026-04-17
+#
+# Prerequisites, dev environment setup, code conventions,
+# branch workflow, CI pipeline, and PR process.
+#
+#   Prerequisites
+#   Setup
+#   Code Conventions
+#   Branch Workflow
+#   CI Pipeline
+#   Pull Requests
+#   Licensing
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
+
+#+TITLE: RECKIT Contributing Guide
+#+AUTHOR: [[https://orcid.org/0009-0006-4459-5538][Cristian D. Moreno - Kyonax]]
+#+EMAIL: kyonax.corp@gmail.com
+#+DATE: Apr 17, 2026
+#+FILETAGS: :KYO:RECKIT:CONTRIBUTING:
+#+LAST_UPDATE: Apr 17, 2026
+#+OPTIONS: toc:nil num:nil H:3
+
+#+BEGIN_QUOTE
+*NOTE:* This is a Personal project. RECKIT is built to solve a specific problem for its author. It is not currently designed as a community tool. Contributions are welcome for learning or personal use, but the roadmap and scope are driven by one person's needs. If this ever becomes a viable open-source project, the contribution process will be updated accordingly.
+#+END_QUOTE
+
+* Prerequisites
+
+| Tool       | Version             | Check                                |
+|------------+---------------------+--------------------------------------|
+| Node.js    | =>=20.0.0=            | =node --version=                       |
+| npm        | ships with Node     | =npm --version=                        |
+| Git        | any recent          | =git --version=                        |
+| OBS Studio | 32.x with WebSocket | =obs-studio-browser= AUR or equivalent |
+
+OBS is only needed to test overlays live. You can develop the Vue app and landing page without it.
+
+* Setup
+
+#+BEGIN_SRC bash
+git clone https://github.com/Kyonax/reckit.git
+cd reckit
+npm ci
+#+END_SRC
+
+Copy the environment template and fill in your values:
+
+#+BEGIN_SRC bash
+cp .env.example .env
+#+END_SRC
+
+The =VITE_= prefix is required for Vite to expose variables to the app. See =.env.example= for the full list.
+
+Start the dev server:
+
+#+BEGIN_SRC bash
+npm run dev
+#+END_SRC
+
+Open =http://localhost:5173/= for the landing page.
+
+** Available scripts
+
+| Script     | Command               | Purpose                    |
+|------------+-----------------------+----------------------------|
+| Dev server | =npm run dev=           | Vite on port 5173          |
+| Build      | =npm run build=         | Production bundle          |
+| Lint       | =npm run lint=          | ESLint (errors + warnings) |
+| Lint fix   | =npm run lint:fix=      | Auto-fix fixable issues    |
+| Test       | =npm run test=          | Vitest (CI entrypoint)     |
+| Test watch | =npm run test:watch=    | Vitest in watch mode       |
+| Coverage   | =npm run test:coverage= | v8 coverage report         |
+
+* Code Conventions
+Enforced by [[file:eslint.config.mjs][eslint.config.mjs]] ([[https://github.com/ccs-devhub][CCS]] standards).
+
+** Naming
+
+| Scope                 | Style      | Example           |
+|-----------------------+------------+-------------------|
+| Variables, parameters | =snake_case= | =overlay_timer=     |
+| Functions, methods    | =camelCase=  | =startOverlay()=    |
+| Constants             | =UPPER_CASE= | =MAX_RETRY=         |
+| Classes               | =PascalCase= | =HudController=     |
+| Filenames             | =kebab-case= | =scene-switcher.js= |
+| Vue component imports | =PascalCase= | =OverlayCard=       |
+
+These are machine-enforced via =@typescript-eslint/naming-convention=.
+
+** Vue
+
+- Composition API with =<script setup>= only, never Options API
+- =<style lang="scss" scoped>= on every component
+- Props use =snake_case= (not Vue's default camelCase)
+- Template references match the script variable name exactly
+
+** Formatting
+
+- 2-space indent, single quotes, semicolons
+- 80 character max line length
+- Trailing commas on multiline
+- Imports sorted by =simple-import-sort= (externals first, blank line, locals)
+
+** Security
+=BANNED= patterns (enforced by ESLint + CI security scan):
+
+- =eval()=, =Function()=, =innerHTML= assignment, =document.write=
+- =setTimeout= / =setInterval= with string arguments
+- Hardcoded tokens, secrets, API keys
+- =http://= URLs
+
+See [[file:.github/SECURITY.org][SECURITY.org]] for the full list.
+
+* Branch Workflow
+
+#+BEGIN_EXAMPLE
+master        <- release PRs only (from dev)
+  dev         <- feature PRs merge here
+    feat-*    <- feature branches
+    fix-*     <- fix branches
+#+END_EXAMPLE
+
+- Feature branches off =dev=, PRs into =dev=
+- Release PRs from =dev= into =master= (gated by =release.yml=)
+- All changes require review from =@Kyonax= ([[file:.github/CODEOWNERS][CODEOWNERS]])
+
+* CI Pipeline
+Every PR runs 6 jobs ([[file:.github/workflows/ci.yml][ci.yml]]):
+
+| Job             | What it checks                                                |
+|-----------------+---------------------------------------------------------------|
+| ESLint          | =npm run lint= passes with 0 errors                             |
+| Security Scan   | No banned patterns in the diff                                |
+| License Headers | First 5 lines of every source file contain =Cristian D. Moreno= |
+| Protected Files | Advisory warning when legal, governance, or CI files change   |
+| Unit Tests      | =npm run test= passes                                           |
+| Pre-Check Label | Aggregates all results, toggles =Pre-Check Failed= label        |
+
+Release PRs (=dev= into =master=) also run [[file:.github/workflows/release.yml][release.yml]] which gates on =CHANGELOG.org= and =README.org= version updates.
+
+** Before opening a PR
+
+#+BEGIN_SRC bash
+npm run lint          # 0 errors
+npm run test          # all passing
+npm run build         # clean build
+#+END_SRC
+
+* Pull Requests
+PRs follow the [[file:.github/PULL_REQUEST_TEMPLATE.md][PR template]] which includes a 13-item self-review checklist, themed change subsections, and testing instructions.
+
+** Every new source file must have
+
+1. The MPL-2.0 license header (first 4 lines)
+2. Naming that follows the conventions table above
+3. Imports sorted by =simple-import-sort=
+
+** CHANGELOG
+Every PR that ships user-facing changes should update [[file:CHANGELOG.org][CHANGELOG.org]]. Release entries follow the format: =* [vX.Y] — YYYY-MM-DD :: Short Title=.
+
+* Licensing
+Dual-licensed under [[file:LICENSE][MPL-2.0]] (default) and [[file:LICENSE-APACHE][Apache-2.0]]. See [[file:LICENSING.org][LICENSING.org]] for which applies to each file and how to add headers. The [[file:NOTICE][NOTICE]] file must be included in all redistributions.

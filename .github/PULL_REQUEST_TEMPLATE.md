@@ -1,4 +1,24 @@
 <!--
+  Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+   __  __                          ____
+  / /_/ /  ___   ___ ___________  / / /
+ / __/ _ \/ -_) (_-</ __/ __/ _ \/ / /
+ \__/_//_/\__/ /___/\__/_/  \___/_/_/
+
+  PULL_REQUEST_TEMPLATE.md — PR body scaffold
+  2026-04-17
+
+  Self-documenting template with 13 embedded format rules.
+  Every populated PR carries the rules with it.
+
+  Cristian D. Moreno (Kyonax)
+  kyonax.corp@gmail.com
+-->
+
+<!--
   ─────────────────────────────────────────────────────────────
    RECKIT Pull Request Template
   ─────────────────────────────────────────────────────────────
