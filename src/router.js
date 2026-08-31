@@ -34,6 +34,12 @@ const routes = [
     name: 'home',
     component: () => import('@views/home.vue'),
   },
+  {
+    // Mounted inside OBS as a Custom Browser Dock — see tools/obs/.
+    path: '/control',
+    name: 'control',
+    component: () => import('@views/control.vue'),
+  },
   ...source_routes,
   {
     path: '/:pathMatch(.*)*',

@@ -126,6 +126,7 @@
 <script setup>
 import { useContextChannel } from '@composables/use-context-channel.js';
 import { getContexts } from '@shared/brand-loader.js';
+import { parseOrg } from '@shared/utils/org.js';
 import UiChip from '@ui/chip.vue';
 import UiOrgContent from '@ui/org-content.vue';
 import { computed, onUnmounted, ref, watch } from 'vue';
@@ -141,7 +142,22 @@ const USER_INTERACTION_PAUSE_MS = 5000;
 const contexts = getContexts(BRAND_HANDLE);
 const channel = useContextChannel();
 
+// A live draft (authored in the OBS script panel and delivered over the
+// relay) OVERRIDES the build-time file context. It is parsed here at
+// runtime — uniorg-parse runs perfectly well in the browser, so the same
+// .org feature set is available to text typed live. A malformed draft
+// falls through to `null` (placeholder) rather than throwing and blanking
+// the whole source mid-recording.
 const parsed = computed(() => {
+  const draft = channel.draft_org.value;
+  if (draft && draft.trim()) {
+    try {
+      return parseOrg(draft);
+    } catch {
+      return null;
+    }
+  }
+
   const slug = channel.active_slug.value;
   if (!slug) {
     return null;

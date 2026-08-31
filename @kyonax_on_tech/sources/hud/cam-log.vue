@@ -176,7 +176,7 @@ const debug_text = computed(() => {
 
 .hud-text {
   @include hud-text-base;
-  opacity: 0.7;
+  opacity: 0.82;
 }
 
 .hud-text--primary {
@@ -201,7 +201,7 @@ const debug_text = computed(() => {
   right: 4em;
   font-size: var(--fs-350);
   letter-spacing: 3px;
-  opacity: 0.7;
+  opacity: 0.82;
 }
 
 .offline {
@@ -233,7 +233,7 @@ const debug_text = computed(() => {
   font-size: var(--fs-300);
   letter-spacing: 2px;
   text-transform: uppercase;
-  opacity: 0.6;
+  opacity: 0.72;
   text-shadow: var(--hud-halo-text), var(--hud-glow);
   contain: layout paint;
 }

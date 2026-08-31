@@ -39,6 +39,11 @@ export function useContextChannel() {
 
   const active_slug = ref(null);
   const sidebar_open = ref(false);
+  // Raw .org text authored live (e.g. from the OBS script panel). When
+  // non-empty it OVERRIDES the file-backed context: consumers parse it
+  // at runtime instead of reading the build-time CONTEXTS map. Empty
+  // string means "fall back to active_slug".
+  const draft_org = ref('');
 
   const persisted = readPersistedState();
   if (persisted) {
@@ -47,6 +52,9 @@ export function useContextChannel() {
     }
     if (typeof persisted.sidebar_open === 'boolean') {
       sidebar_open.value = persisted.sidebar_open;
+    }
+    if (typeof persisted.draft_org === 'string') {
+      draft_org.value = persisted.draft_org;
     }
   }
 
@@ -60,6 +68,9 @@ export function useContextChannel() {
     }
     if (typeof remote.sidebar_open === 'boolean') {
       sidebar_open.value = remote.sidebar_open;
+    }
+    if (typeof remote.draft_org === 'string') {
+      draft_org.value = remote.draft_org;
     }
   }
 
@@ -141,6 +152,7 @@ export function useContextChannel() {
         JSON.stringify({
           active_slug: active_slug.value,
           sidebar_open: sidebar_open.value,
+          draft_org: draft_org.value,
         }),
       );
     } catch {
@@ -152,6 +164,7 @@ export function useContextChannel() {
     const snapshot = {
       active_slug: active_slug.value,
       sidebar_open: sidebar_open.value,
+      draft_org: draft_org.value,
     };
     channel.postMessage(snapshot);
     pushState(snapshot);
@@ -172,9 +185,19 @@ export function useContextChannel() {
     broadcastSnapshot();
   }
 
+  function setDraftOrg(text) {
+    draft_org.value = typeof text === 'string' ? text : '';
+    broadcastSnapshot();
+  }
+
+  function clearDraftOrg() {
+    draft_org.value = '';
+    broadcastSnapshot();
+  }
+
   const scope = effectScope(true);
   scope.run(() => {
-    watch([active_slug, sidebar_open], schedulePersist);
+    watch([active_slug, sidebar_open, draft_org], schedulePersist);
     watch(sidebar_open, (open) => applyDocumentClass(open));
   });
 
@@ -183,9 +206,12 @@ export function useContextChannel() {
   shared_state = {
     active_slug,
     sidebar_open,
+    draft_org,
     setActiveSlug,
     toggleSidebar,
     hideSidebar,
+    setDraftOrg,
+    clearDraftOrg,
   };
   return shared_state;
 }
