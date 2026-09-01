@@ -15,6 +15,7 @@
 #
 #   Node / Vue / Vite
 #   Build / cache
+#   Python / OBS tools
 #   Logs
 #   Test / coverage
 #   Environment / secrets
@@ -49,6 +50,10 @@ dist-ssr/
 .eslintcache
 .stylelintcache
 .prettiercache
+
+# ── Python / OBS tools ───────────────────────────────────────
+__pycache__/
+*.py[cod]
 
 # ── Logs ─────────────────────────────────────────────────────
 *.log

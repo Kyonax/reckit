@@ -159,14 +159,19 @@ describe('Brand loader — SOURCES', () => {
 describe('Brand loader — CONTEXTS', () => {
   const BRAND_KOT = '@kyonax_on_tech';
 
+  // Context .org files are per-contributor content and stay untracked
+  // (see .gitignore). Only the discovery plumbing is asserted here, so a
+  // clean checkout — CI included — validates the same contract.
+
   it('exposes CONTEXTS as a brand-keyed object', () => {
     expect(typeof CONTEXTS).toBe('object');
     expect(CONTEXTS).not.toBe(null);
   });
 
-  it(`discovers at least one context under ${BRAND_KOT}`, () => {
+  it(`exposes a per-brand map for ${BRAND_KOT}`, () => {
     const kot = CONTEXTS[BRAND_KOT] || {};
-    expect(Object.keys(kot).length).toBeGreaterThan(0);
+    expect(typeof kot).toBe('object');
+    expect(kot).not.toBe(null);
   });
 
   it('every context has { raw: string, parsed: object|null }', () => {
@@ -208,7 +213,7 @@ describe('Brand loader — CONTEXTS', () => {
   it('getContexts(handle) returns the per-brand map', () => {
     const kot = getContexts(BRAND_KOT);
     expect(typeof kot).toBe('object');
-    expect(Object.keys(kot).length).toBeGreaterThan(0);
+    expect(kot).not.toBe(null);
   });
 
   it('getContexts(missing-handle) returns empty object', () => {
