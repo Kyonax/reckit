@@ -67,6 +67,10 @@ draft_marquee = ""
 draft_body = ""
 save_slug = "live-note"
 
+# cam-log HUD: the bracketed label on its top-right row, e.g. [SESSION].
+# Empty string lets the overlay use its own default.
+cam_label = ""
+
 # slug -> display title, rebuilt by refresh_contexts()
 context_titles = {}
 context_slugs = []
@@ -144,6 +148,7 @@ def push():
         "active_slug": active_slug if active_slug else None,
         "sidebar_open": bool(sidebar_open),
         "draft_org": draft,
+        "cam_label": cam_label,
     }).encode("utf-8")
     try:
         req = urllib.request.Request(
@@ -157,7 +162,8 @@ def push():
         mode = f"live({len(draft)}b)" if draft else (active_slug or "(none)")
         obs.script_log(
             obs.LOG_INFO,
-            f"[reckit] pushed {mode} sidebar={sidebar_open}",
+            f"[reckit] pushed {mode} sidebar={sidebar_open} "
+            f"cam=[{cam_label or 'SESSION'}]",
         )
         return True
     except (urllib.error.URLError, OSError) as err:
@@ -359,6 +365,7 @@ def script_defaults(settings):
     obs.obs_data_set_default_bool(settings, "sidebar_open", False)
     obs.obs_data_set_default_bool(settings, "use_live_text", False)
     obs.obs_data_set_default_string(settings, "save_slug", "live-note")
+    obs.obs_data_set_default_string(settings, "cam_label", "")
 
 
 def script_properties():
@@ -379,6 +386,10 @@ def script_properties():
         obs.obs_property_list_add_string(picker, label, slug)
 
     obs.obs_properties_add_bool(props, "sidebar_open", "Sidebar open")
+
+    # ---- cam-log --------------------------------------------------------
+    obs.obs_properties_add_text(
+        props, "cam_label", "cam-log [BRACKET] label", obs.OBS_TEXT_DEFAULT)
 
     # ---- live text -----------------------------------------------------
     obs.obs_properties_add_bool(
@@ -422,7 +433,7 @@ def script_properties():
 def script_update(settings):
     global base_url, contexts_dir, active_slug, sidebar_open
     global use_live_text, draft_title, draft_subtitle, draft_description
-    global draft_tags, draft_marquee, draft_body, save_slug
+    global draft_tags, draft_marquee, draft_body, save_slug, cam_label
 
     new_dir = obs.obs_data_get_string(settings, "contexts_dir")
     base_url = obs.obs_data_get_string(settings, "base_url")
@@ -431,7 +442,7 @@ def script_update(settings):
     before = (
         active_slug, sidebar_open, use_live_text, draft_title,
         draft_subtitle, draft_description, draft_tags, draft_marquee,
-        draft_body,
+        draft_body, cam_label,
     )
 
     active_slug = obs.obs_data_get_string(settings, "context_slug")
@@ -443,11 +454,12 @@ def script_update(settings):
     draft_tags = obs.obs_data_get_string(settings, "draft_tags")
     draft_marquee = obs.obs_data_get_string(settings, "draft_marquee")
     draft_body = obs.obs_data_get_string(settings, "draft_body")
+    cam_label = obs.obs_data_get_string(settings, "cam_label")
 
     after = (
         active_slug, sidebar_open, use_live_text, draft_title,
         draft_subtitle, draft_description, draft_tags, draft_marquee,
-        draft_body,
+        draft_body, cam_label,
     )
 
     dir_changed = new_dir != contexts_dir

@@ -44,6 +44,10 @@ export function useContextChannel() {
   // at runtime instead of reading the build-time CONTEXTS map. Empty
   // string means "fall back to active_slug".
   const draft_org = ref('');
+  // Bracketed label on the cam-log HUD's top-right row (`[SESSION]`).
+  // Empty string means "use the component's own default" — the relay
+  // never dictates a fallback, the consumer owns it.
+  const cam_label = ref('');
 
   const persisted = readPersistedState();
   if (persisted) {
@@ -55,6 +59,9 @@ export function useContextChannel() {
     }
     if (typeof persisted.draft_org === 'string') {
       draft_org.value = persisted.draft_org;
+    }
+    if (typeof persisted.cam_label === 'string') {
+      cam_label.value = persisted.cam_label;
     }
   }
 
@@ -71,6 +78,9 @@ export function useContextChannel() {
     }
     if (typeof remote.draft_org === 'string') {
       draft_org.value = remote.draft_org;
+    }
+    if (typeof remote.cam_label === 'string') {
+      cam_label.value = remote.cam_label;
     }
   }
 
@@ -153,6 +163,7 @@ export function useContextChannel() {
           active_slug: active_slug.value,
           sidebar_open: sidebar_open.value,
           draft_org: draft_org.value,
+          cam_label: cam_label.value,
         }),
       );
     } catch {
@@ -165,6 +176,7 @@ export function useContextChannel() {
       active_slug: active_slug.value,
       sidebar_open: sidebar_open.value,
       draft_org: draft_org.value,
+      cam_label: cam_label.value,
     };
     channel.postMessage(snapshot);
     pushState(snapshot);
@@ -195,9 +207,17 @@ export function useContextChannel() {
     broadcastSnapshot();
   }
 
+  function setCamLabel(text) {
+    cam_label.value = typeof text === 'string' ? text : '';
+    broadcastSnapshot();
+  }
+
   const scope = effectScope(true);
   scope.run(() => {
-    watch([active_slug, sidebar_open, draft_org], schedulePersist);
+    watch(
+      [active_slug, sidebar_open, draft_org, cam_label],
+      schedulePersist,
+    );
     watch(sidebar_open, (open) => applyDocumentClass(open));
   });
 
@@ -207,11 +227,13 @@ export function useContextChannel() {
     active_slug,
     sidebar_open,
     draft_org,
+    cam_label,
     setActiveSlug,
     toggleSidebar,
     hideSidebar,
     setDraftOrg,
     clearDraftOrg,
+    setCamLabel,
   };
   return shared_state;
 }

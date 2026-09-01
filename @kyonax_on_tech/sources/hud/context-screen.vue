@@ -348,9 +348,18 @@ html:has(.context-screen-overlay) {
 @use "@app/scss/abstracts/mixins" as *;
 
 .context-screen-overlay {
-  --strip-width-ratio: 0.66;
+  /* Sidebar width is pinned to the Screen scene's camera column so an
+   * open sidebar covers the OBS camera item exactly, with no sliver of
+   * webcam showing down its left edge. Camera item sits at x=1069 on a
+   * 1920 canvas, so the sidebar must start there:
+   *     (1920 - 1069) / 1920 = 0.4432
+   * 0.4435 is used to guarantee full coverage against sub-pixel
+   * rounding. The strip takes the remainder so the two still meet on a
+   * single shared border (§1.18). Move the camera item and these two
+   * numbers must move with it — they are one measurement, not two. */
+  --strip-width-ratio: 0.5643;
   --strip-fs-scale: 0.95;
-  --sidebar-width-ratio: 0.34;
+  --sidebar-width-ratio: 0.4357;
   position: fixed;
   inset: 0;
   width: 100%;
@@ -418,12 +427,29 @@ html:has(.context-screen-overlay) {
   transition: padding var(--motion-sidebar-ms) var(--motion-strip-ease);
 }
 
+/* Shared-border rule (§1.18): when a marquee follows the strip, the
+ * marquee's `border-top` is the divider, so the strip drops its own
+ * bottom border. With no marquee the strip keeps it and closes the
+ * lower-third itself. `:has()` ships in Chromium 105+ — OBS 32.x CEF
+ * supports it, same as the `html:has(...)` rule above. */
+.context-strip:has(+ .context-marquee) {
+  border-bottom: none;
+}
+
 .context-strip__title {
   font-family: var(--font-display);
   font-size: var(--fs-700);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: -0.04em;
+  /* UNITLESS line-height is mandatory here. `body` sets an ABSOLUTE
+   * `line-height: var(--fs-500)` (32px), which this 48px title would
+   * otherwise inherit — a line box smaller than its own glyphs. On one
+   * line that clips the ascenders; once the title wraps (which it does
+   * as soon as the sidebar opens and the strip narrows) the two lines
+   * overlap each other. Any element here that raises font-size must set
+   * its own ratio-based line-height. */
+  line-height: 1.05;
   color: var(--clr-neutral-100);
   text-shadow: var(--hud-halo-text);
   transition: font-size var(--motion-sidebar-ms) var(--motion-strip-ease);
@@ -434,6 +460,10 @@ html:has(.context-screen-overlay) {
   font-size: var(--fs-425);
   font-weight: 400;
   letter-spacing: 0.02em;
+  /* Ratio-based for the same reason as the title — the inherited 32px
+   * absolute value happens to clear this font size, but it would stop
+   * doing so the moment --fs-425 is bumped. */
+  line-height: 1.25;
   color: var(--clr-primary-100);
   transition: font-size var(--motion-sidebar-ms) var(--motion-strip-ease);
 }
@@ -441,7 +471,9 @@ html:has(.context-screen-overlay) {
 .context-strip__description {
   font-family: var(--font-mono);
   font-size: var(--fs-400);
-  line-height: 1.25;
+  /* 1.25 left the last line's descenders clipped once the description
+   * wrapped to two lines (scrollHeight exceeded the box by ~3px). */
+  line-height: 1.4;
   color: var(--clr-neutral-200);
   transition: font-size var(--motion-sidebar-ms) var(--motion-strip-ease);
 }
@@ -482,10 +514,15 @@ html:has(.context-screen-overlay) {
   line-height: var(--fs-425);
   width: 100%;
   overflow: hidden;
-  /* Bottom border closes the lower-third's lower edge with the same
-   * 1px line as the strip's outer borders. The top border is dropped
-   * because the strip above already owns the strip/marquee divider via
-   * its own `border-bottom` — stacking both would render a 2px line. */
+  /* The marquee owns BOTH of its horizontal rules. The top border is
+   * the strip/marquee divider — the strip drops its own `border-bottom`
+   * when a marquee follows it (see the `:has()` rule below), so the two
+   * surfaces share a single 1px line instead of stacking into 2px
+   * (§1.18 shared-border rule). Without this the gold bar butted
+   * straight against the strip with no visible separation, while the
+   * placeholder state — which renders no marquee at all — kept a clean
+   * edge, making the two states look inconsistent. */
+  border-top: 1px solid var(--clr-border-100);
   border-bottom: 1px solid var(--clr-border-100);
   border-radius: 0;
   contain: layout paint;

@@ -20,7 +20,7 @@
 
       <div class="hud-group group--top-right">
         <span class="hud-text">
-          <span class="bracket">[</span>SESSION<span class="bracket">]</span>
+          <span class="bracket">[</span>{{ session_label }}<span class="bracket">]</span>
           {{ session_id }}
         </span>
         <span class="hud-text hud-text--primary cam-online">CAM ONLINE</span>
@@ -71,6 +71,7 @@
 </template>
 
 <script setup>
+import { useContextChannel } from '@composables/use-context-channel.js';
 import { useObsWebsocket } from '@composables/use-obs-websocket.js';
 import { useRecordingStatus } from '@composables/use-recording-status.js';
 import { useSceneName } from '@composables/use-scene-name.js';
@@ -92,6 +93,7 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const TAKE_PAD_LENGTH = 2;
 const DEBUG_REFRESH_MS = 200;
+const DEFAULT_SESSION_LABEL = 'SESSION';
 
 const { connected } = useObsWebsocket();
 const {
@@ -100,6 +102,16 @@ const {
   take_count,
 } = useRecordingStatus();
 const { scene_name } = useSceneName();
+
+// Bracketed label on the top-right row. Driven live from the OBS script
+// panel through the relay control plane (§1.16); falls back to the
+// hardcoded default whenever the relay carries nothing.
+const channel = useContextChannel();
+
+const session_label = computed(() => {
+  const label = (channel.cam_label.value || '').trim();
+  return (label || DEFAULT_SESSION_LABEL).toUpperCase();
+});
 
 const audio_state = ref({
   active: false,
