@@ -4,24 +4,24 @@
  * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
  */
 
-import { onUnmounted, ref, watch } from 'vue';
+import { useObsWebsocket } from '@composables/use-obs-websocket.js';
+import { ref, watch } from 'vue';
 
 const TIMER_INTERVAL = 1000;
 const MS_PER_SECOND = 1000;
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;
-const PAD_LENGTH = 2;
+const PAD_BOUNDARY = 10;
 
-/**
- * Composable — recording state from OBS WebSocket.
- * Tracks recording status, elapsed time, and take count
- * (incremented every time recording starts in the session).
- *
- * @param {object} params
- * @param {object} params.obs - OBSWebSocket instance
- * @param {import('vue').Ref<boolean>} params.connected
- */
-export function useRecordingStatus({ obs, connected }) {
+let shared_state = null;
+
+export function useRecordingStatus() {
+  if (shared_state) {
+    return shared_state;
+  }
+
+  const { obs, connected } = useObsWebsocket();
+
   const is_recording = ref(false);
   const elapsed_time = ref('00:00:00');
   const record_state = ref('stopped');
@@ -41,9 +41,10 @@ export function useRecordingStatus({ obs, connected }) {
     );
     const seconds = total_seconds % SECONDS_PER_MINUTE;
 
-    return [hours, minutes, seconds]
-      .map((n) => String(n).padStart(PAD_LENGTH, '0'))
-      .join(':');
+    const hh = hours < PAD_BOUNDARY ? `0${hours}` : `${hours}`;
+    const mm = minutes < PAD_BOUNDARY ? `0${minutes}` : `${minutes}`;
+    const ss = seconds < PAD_BOUNDARY ? `0${seconds}` : `${seconds}`;
+    return `${hh}:${mm}:${ss}`;
   }
 
   function startTimer() {
@@ -105,17 +106,13 @@ export function useRecordingStatus({ obs, connected }) {
     } else {
       stopTimer();
     }
-  });
+  }, { immediate: true });
 
-  onUnmounted(() => {
-    stopTimer();
-    obs.off('RecordStateChanged', handleRecordStateChanged);
-  });
-
-  return {
+  shared_state = {
     is_recording,
     elapsed_time,
     record_state,
     take_count,
   };
+  return shared_state;
 }

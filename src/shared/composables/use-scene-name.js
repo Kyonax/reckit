@@ -4,17 +4,17 @@
  * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
  */
 
-import { onUnmounted, ref, watch } from 'vue';
+import { useObsWebsocket } from '@composables/use-obs-websocket.js';
+import { ref, watch } from 'vue';
 
-/**
- * Composable — current OBS scene name.
- * Updates on scene changes via WebSocket events.
- *
- * @param {object} params
- * @param {object} params.obs - OBSWebSocket instance
- * @param {import('vue').Ref<boolean>} params.connected
- */
-export function useSceneName({ obs, connected }) {
+let shared_state = null;
+
+export function useSceneName() {
+  if (shared_state) {
+    return shared_state;
+  }
+
+  const { obs, connected } = useObsWebsocket();
   const scene_name = ref('');
 
   function handleSceneChanged(event) {
@@ -23,32 +23,21 @@ export function useSceneName({ obs, connected }) {
 
   async function fetchInitialScene() {
     try {
-      const result = await obs.call(
-        'GetCurrentProgramScene',
-      );
+      const result = await obs.call('GetCurrentProgramScene');
       scene_name.value = result.sceneName || '';
     } catch {
       scene_name.value = '';
     }
   }
 
-  obs.on(
-    'CurrentProgramSceneChanged',
-    handleSceneChanged,
-  );
+  obs.on('CurrentProgramSceneChanged', handleSceneChanged);
 
   watch(connected, (is_connected) => {
     if (is_connected) {
       fetchInitialScene();
     }
-  });
+  }, { immediate: true });
 
-  onUnmounted(() => {
-    obs.off(
-      'CurrentProgramSceneChanged',
-      handleSceneChanged,
-    );
-  });
-
-  return { scene_name };
+  shared_state = { scene_name };
+  return shared_state;
 }

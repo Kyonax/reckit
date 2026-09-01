@@ -5,7 +5,6 @@
  */
 
 @use "sass:map";
-@use "sass:math";
 @use "variables" as *;
 
 @mixin font-face($name, $path, $weight: normal, $style: normal) {
@@ -25,50 +24,146 @@
 	}
 }
 
-@mixin max-media-query($key) {
-	$size: map.get($breakpoints, $key);
-
-	@media only screen and (max-width: $size) {
-		@content;
-	}
-}
-
-@mixin hud-label-base {
-	position: absolute;
+@mixin hud-text-base {
 	font-family: var(--font-mono);
 	font-size: var(--fs-475);
 	text-transform: uppercase;
 	letter-spacing: 2px;
-	color: var(--clr-neutral-50);
+	color: var(--clr-neutral-100);
 }
 
-@mixin cyberpunk-glow(
-	$glow-color: hsl(47, 95%, 56%),
-	$blur: 15px,
-	$spread: 5px,
-	$animated: true,
-	$speed: 1.5s,
-	$pulse-variation: 0.2
-) {
-	box-shadow: 0 0 $spread $blur $glow-color;
+@mixin hud-label-base {
+	@include hud-text-base;
+	position: absolute;
+}
 
-	@if $animated {
-		$index: math.floor(calc(math.random() * 1000000));
+// Ad-hoc color helpers for cases where a dedicated --clr-X-XX token does
+// not exist. Always prefer a named token (e.g. var(--clr-primary-100-06))
+// when available — these helpers are for one-off variants only. Each
+// produces a runtime color-mix() expression compatible with CSS custom
+// properties.
+//
+// Usage:
+//   background: alpha-tint(--clr-primary-100, 6%);
+//   color:      darken(--clr-primary-100, 30%);
+//   border:     1px solid lighten(--clr-neutral-100, 20%);
+@function alpha-tint($color-var, $percent) {
+	@return color-mix(in srgb, var(#{$color-var}) #{$percent}, transparent);
+}
 
-		animation: cyberpunk-pulse-#{$index} $speed ease-in-out infinite alternate;
+@function darken($color-var, $by) {
+	@return color-mix(in srgb, var(#{$color-var}) #{100% - $by}, black);
+}
 
-		@keyframes cyberpunk-pulse-#{$index} {
-			0% {
-				box-shadow: 0 0 calc(#{$spread} / 2) calc(#{$blur} / 2) $glow-color;
-			}
+@function lighten($color-var, $by) {
+	@return color-mix(in srgb, var(#{$color-var}) #{100% - $by}, white);
+}
 
-			50% {
-				box-shadow: 0 0 calc(#{$spread} * (1.5 + $pulse-variation)) calc(#{$blur} * (1.5 + $pulse-variation)) $glow-color;
-			}
+// Adds hard-edge corner squares to a container — a HUD/cyberpunk
+// treatment that pairs with a 1px solid border. Expects the consumer
+// to set its own background-color + border; this mixin only paints
+// the corner markers via background-image.
+//
+// Usage:
+//   .container {
+//     background-color: var(--clr-neutral-500);
+//     border: 1px solid var(--clr-border-100);
+//     @include corner-dots(var(--clr-border-100));            // all 4
+//     @include corner-dots(var(--clr-border-100), 4.5px, tl bl);  // left only
+//   }
+//
+// Parameters:
+//   $color   — solid CSS color (e.g. var(--clr-border-100))
+//   $size    — square edge length, default 4.5px
+//   $corners — space-separated list of corner keys to draw:
+//                tl  top-left
+//                tr  top-right
+//                bl  bottom-left
+//                br  bottom-right
+//              Default: tl tr bl br (all four).
+//
+// Implementation: stacked linear-gradient background-image layers, one
+// per requested corner. background-origin: border-box places position
+// 0 0 / 100% 100% at the OUTER border edge, so each square sits flush
+// with the corner intersection rather than inset by the border width.
+@mixin corner-dots($color, $size: 4.5px, $corners: tl tr bl br) {
+	$position-map: (
+		tl: 0 0,
+		tr: 100% 0,
+		bl: 0 100%,
+		br: 100% 100%,
+	);
+	$images: ();
+	$positions: ();
 
-			100% {
-				box-shadow: 0 0 calc(#{$spread} / 2) calc(#{$blur} / 2) $glow-color;
-			}
+	@each $corner in $corners {
+		$pos: map.get($position-map, $corner);
+		@if $pos {
+			$images: append(
+				$images,
+				linear-gradient(#{$color}, #{$color}),
+				$separator: comma
+			);
+			$positions: append($positions, $pos, $separator: comma);
 		}
 	}
+
+	@if length($images) > 0 {
+		background-image: $images;
+		background-position: $positions;
+		background-size: #{$size} #{$size};
+		background-repeat: no-repeat;
+		background-origin: border-box;
+		background-clip: border-box;
+	}
 }
+
+// Pseudo-element corner squares — half outside, half inside the
+// container so the square sits CENTERED on the corner intersection.
+//
+// IMPORTANT: the consumer must be a positioned element (any of
+// `position: relative | absolute | fixed | sticky`). The mixin does
+// NOT set `position: relative` itself — that would clobber existing
+// `position: absolute` consumers (e.g. a sidebar pinned to the right
+// edge). The consumer must also NOT use `contain: paint`, which would
+// clip pseudo-elements rendered outside the box.
+//
+// Each mixin handles ONE corner via either ::before or ::after, so a
+// surface needing two corners (e.g. strip = TL + TR) calls both
+// `corner-square-tl` and `corner-square-tr`.
+//
+// Usage:
+//   .container {
+//     position: relative;             // or absolute / fixed
+//     border: 1px solid var(--clr-border-100);
+//     @include corner-square-tl(var(--clr-neutral-50));
+//     @include corner-square-tr(var(--clr-neutral-50));
+//   }
+@mixin corner-square-tl($color, $size: 4.5px) {
+	&::before {
+		content: '';
+		position: absolute;
+		top: -#{$size * 0.5};
+		left: -#{$size * 0.5};
+		width: $size;
+		height: $size;
+		background: $color;
+		pointer-events: none;
+		z-index: 1;
+	}
+}
+
+@mixin corner-square-tr($color, $size: 4.5px) {
+	&::after {
+		content: '';
+		position: absolute;
+		top: -#{$size * 0.5};
+		right: -#{$size * 0.5};
+		width: $size;
+		height: $size;
+		background: $color;
+		pointer-events: none;
+		z-index: 1;
+	}
+}
+

@@ -3,162 +3,112 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
  *
- * Audio analyzer — reads real-time volume from OBS via
- * the InputVolumeMeters WebSocket event. Generates a
- * multi-band display with smoothed variation around the
- * actual level (OBS sends a single level per input, not
- * frequency data — standard for overlay visualizers).
+ * Audio analyzer — singleton composable. One InputVolumeMeters
+ * subscription per page; any caller (typically one AudioMeter)
+ * receives the same levels buffer and tick counter.
  */
 
-import { onUnmounted, ref } from 'vue';
+import { useObsWebsocket } from '@composables/use-obs-websocket.js';
+import { ref } from 'vue';
 
 const BAR_COUNT = 16;
-const MAX_LEVEL = 255;
+const TARGET_SOURCE = 'Mic/Aux';
+const PEAK_INDEX = 1;
 const GAIN = 8;
 const SMOOTHING = 0.2;
-const VARIATION_RANGE = 0.7;
-const VARIATION_CENTER = 0.5;
 const DECAY_RATE = 0.85;
+const VARIATION_CENTER = 0.5;
+const VARIATION_RANGE = 0.7;
 const MIN_AUDIBLE = 0.005;
-const PEAK_INDEX = 1;
 
-/**
- * @param {object} params
- * @param {object} params.obs - OBSWebSocket instance
- * @param {object} [params.options]
- * @param {string} [params.options.source_name] - OBS input
- *   name to monitor. Empty = first audio input found.
- * @param {number} [params.options.bar_count] - bars
- */
-export function useAudioAnalyzer({ obs, options = {} }) {
+const JITTER_SIZE = 256;
+const JITTER_MASK = JITTER_SIZE - 1;
+const JITTER_TABLE = new Float32Array(JITTER_SIZE);
+for (let i = 0; i < JITTER_SIZE; i++) {
+  JITTER_TABLE[i] = Math.random();
+}
+
+let shared_state = null;
+
+export function useAudioAnalyzer({ options = {} } = {}) {
+  if (shared_state) {
+    return shared_state;
+  }
+
   const bar_count = options.bar_count || BAR_COUNT;
-  const target_source = options.source_name || '';
+  const { obs } = useObsWebsocket();
 
-  const levels = ref(
-    Array.from({ length: bar_count }, () => 0),
-  );
+  const levels = new Float32Array(bar_count);
+  const smoothed = new Float32Array(bar_count);
+
+  const tick = ref(0);
   const active = ref(false);
   const source_name = ref('');
 
-  let raw_level = 0;
-  const previous_bands = new Float32Array(bar_count);
-  let animation_id = null;
-  let is_stopped = false;
+  let jitter_cursor = 0;
 
-  /**
-   * Handle InputVolumeMeters — extract peak level.
-   * Each channel has [magnitude, peak, input_peak].
-   * We use index 1 (peak) for responsive visualization.
-   * Skips inputs with empty inputLevelsMul.
-   * Runs at ~50Hz, zero allocation in hot path.
-   */
   function handleVolumeMeters(event) {
-    const { inputs } = event;
-
+    const inputs = event?.inputs;
     if (!inputs || inputs.length === 0) {
       return;
     }
 
     let target = null;
-
-    if (target_source) {
-      target = inputs.find(
-        (input) => input.inputName === target_source,
-      );
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
+      if (input.inputName === TARGET_SOURCE
+          && input.inputLevelsMul
+          && input.inputLevelsMul.length > 0) {
+        target = input;
+        break;
+      }
     }
-
-    if (!target) {
-      target = inputs.find(
-        (input) => input.inputLevelsMul
-          && input.inputLevelsMul.length > 0,
-      );
-    }
-
     if (!target) {
       return;
     }
 
-    source_name.value = target.inputName;
-    active.value = true;
-
-    const channel_levels = target.inputLevelsMul;
-
-    if (!channel_levels || channel_levels.length === 0) {
-      raw_level = 0;
-      return;
+    if (source_name.value !== target.inputName) {
+      source_name.value = target.inputName || 'obs';
+    }
+    if (!active.value) {
+      active.value = true;
     }
 
+    const channels = target.inputLevelsMul;
     let peak = 0;
-
-    for (let ch = 0; ch < channel_levels.length; ch++) {
-      const channel = channel_levels[ch];
-      const value = channel[PEAK_INDEX] || 0;
-
+    for (let i = 0; i < channels.length; i++) {
+      const value = channels[i][PEAK_INDEX] || 0;
       if (value > peak) {
         peak = value;
       }
     }
-
-    raw_level = Math.min(1, peak * GAIN);
-  }
-
-  /**
-   * Compute visual band levels from the single raw_level.
-   * Adds per-band variation + exponential smoothing.
-   * Runs on rAF (~60Hz).
-   */
-  function renderFrame() {
-    if (is_stopped) {
-      return;
-    }
-
-    const base = raw_level * MAX_LEVEL;
-    const result = new Array(bar_count);
+    const raw_level = peak * GAIN > 1 ? 1 : peak * GAIN;
+    const audible = raw_level > MIN_AUDIBLE;
 
     for (let i = 0; i < bar_count; i++) {
-      const variation = 1
-        + (Math.random() - VARIATION_CENTER) * VARIATION_RANGE;
-      const target_value = Math.min(
-        MAX_LEVEL,
-        Math.max(0, base * variation),
-      );
+      const jitter = JITTER_TABLE[(i + jitter_cursor) & JITTER_MASK];
+      const variation = 1 + (jitter - VARIATION_CENTER) * VARIATION_RANGE;
+      let target_value = raw_level * variation;
+      if (target_value > 1) {
+        target_value = 1;
+      } else if (target_value < 0) {
+        target_value = 0;
+      }
 
-      const smoothed = previous_bands[i] * SMOOTHING
+      const smooth_new = smoothed[i] * SMOOTHING
         + target_value * (1 - SMOOTHING);
+      const next = audible ? smooth_new : smoothed[i] * DECAY_RATE;
 
-      const decayed = raw_level > MIN_AUDIBLE
-        ? smoothed
-        : previous_bands[i] * DECAY_RATE;
-
-      previous_bands[i] = decayed;
-      result[i] = Math.round(decayed);
+      smoothed[i] = next;
+      levels[i] = next;
     }
 
-    levels.value = result;
-    animation_id = requestAnimationFrame(renderFrame);
+    jitter_cursor = (jitter_cursor + 1) & JITTER_MASK;
+    tick.value++;
   }
 
-  function start() {
-    obs.on('InputVolumeMeters', handleVolumeMeters);
-    animation_id = requestAnimationFrame(renderFrame);
-  }
+  obs.on('InputVolumeMeters', handleVolumeMeters);
 
-  function stop() {
-    is_stopped = true;
-    obs.off('InputVolumeMeters', handleVolumeMeters);
-
-    if (animation_id) {
-      cancelAnimationFrame(animation_id);
-      animation_id = null;
-    }
-
-    raw_level = 0;
-    previous_bands.fill(0);
-    active.value = false;
-  }
-
-  onUnmounted(stop);
-  start();
-
-  return { levels, active, source_name, stop };
+  shared_state = { levels, tick, active, source_name };
+  return shared_state;
 }

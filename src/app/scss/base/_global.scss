@@ -14,9 +14,6 @@
 	box-sizing: border-box;
 }
 
-/* 12px base: OBS overlay targets 1920x1080 with tighter
-   type scale than browser default (16px). Changing this
-   rescales all rem-based sizing. */
 html {
 	font-size: 12px;
 }
@@ -36,7 +33,6 @@ body {
 	min-height: 100vh;
 }
 
-/* Custom scrollbar — minimal, monochrome */
 * {
 	scrollbar-width: thin;
 	scrollbar-color: var(--clr-neutral-300) transparent;

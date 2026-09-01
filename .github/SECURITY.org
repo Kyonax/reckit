@@ -1,16 +1,102 @@
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __             __   _     __   __
+#  / /_/ /  ___   ___ / /  (_)__ / /__/ /
+# / __/ _ \/ -_) (_-</ _ \/ / -_) / _  /
+# \__/_//_/\__/ /___/_//_/_/\__/_/\_,_/
+#
+# SECURITY.org — Banned patterns, enforcement, and contributor guidelines
+# 2026-04-17
+#
+# What is never allowed, how it is enforced, and what
+# contributors must check before opening a PR.
+#
+#   Banned Code Patterns
+#   Banned File Patterns
+#   Enforcement
+#   Environment Variables
+#   For Contributors
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
+
 #+TITLE: RECKIT Security Rules
 #+AUTHOR: [[https://orcid.org/0009-0006-4459-5538][Cristian D. Moreno - Kyonax]]
+#+EMAIL: kyonax.corp@gmail.com
+#+DATE: Apr 17, 2026
+#+FILETAGS: :KYO:RECKIT:SECURITY:
+#+LAST_UPDATE: Apr 17, 2026
+#+OPTIONS: toc:nil num:nil H:3
 
-* Banned patterns
-| Pattern                                   | Reason             |
-|-------------------------------------------+--------------------|
-| =eval()=, =Function()=                        | Code injection     |
-| =innerHTML= assignment                      | XSS vector         |
-| =document.write=                            | XSS vector         |
-| =setTimeout= / =setInterval= with string args | Implicit eval      |
-| Hardcoded tokens, secrets, API keys       | Credential leak    |
-| =http://= URLs                              | Insecure transport |
+* Banned Code Patterns
 
-* Enforced by
-- =eslint.config.mjs= — =no-eval=, =no-implied-eval=, =no-new-func=, =eslint-plugin-security=, =no-restricted-syntax= (innerHTML, document.write)
-- =.github/workflows/ci.yml= — security scan job greps for all banned patterns on every PR
+| Pattern                                   | Reason             | ESLint rule                  |
+|-------------------------------------------+--------------------+------------------------------|
+| =eval()=, =Function()=                        | Code injection     | =no-eval=, =no-new-func=         |
+| =innerHTML= assignment                      | XSS vector         | =no-restricted-syntax=         |
+| =document.write=                            | XSS vector         | =no-restricted-properties=     |
+| =setTimeout= / =setInterval= with string args | Implicit eval      | =no-implied-eval=              |
+| =v-html= in Vue templates                   | XSS vector         | code review                  |
+| Hardcoded tokens, secrets, API keys       | Credential leak    | CI security scan             |
+| =http://= URLs (except localhost)           | Insecure transport | CI security scan             |
+| Unsafe regex (catastrophic backtracking)  | ReDoS              | =security/detect-unsafe-regex= |
+
+* Banned File Patterns
+These must never be committed. Enforced by =.gitignore=.
+
+| Pattern                | Covers                            |
+|------------------------+-----------------------------------|
+| =.env=, =.env.*=           | Runtime environment variables     |
+| =*.pem=, =*.key=, =*.crt=    | TLS certificates and private keys |
+| =*.gpg=                  | GPG-encrypted files               |
+| =id_rsa*=, =id_ed25519*=   | SSH keys                          |
+| =*.token=, =*.secret=      | Generic secret files              |
+| =.npmrc=, =.yarnrc=        | Package manager auth tokens       |
+| =auth.json=              | Authentication credentials        |
+| =*.sqlite=, =*.db=, =*.sql=  | Database files and dumps          |
+| =secrets/=, =credentials/= | Secret directories                |
+
+* Enforcement
+Two layers run on every pull request:
+
+** ESLint (=eslint.config.mjs=)
+
+- =no-eval=, =no-implied-eval=, =no-new-func=, =no-script-url= (all =error=)
+- =eslint-plugin-security= rules: =detect-eval-with-expression=, =detect-unsafe-regex=, =detect-buffer-noassert=, =detect-new-buffer=, =detect-no-csrf-before-method-override=
+- =no-restricted-syntax= blocks =innerHTML= assignment
+- =no-restricted-properties= blocks =document.write=
+
+** CI Security Scan (=.github/workflows/ci.yml=)
+Greps the entire codebase for patterns ESLint cannot catch:
+
+- Dangerous function calls (=eval=, =Function=, =innerHTML=, =document.write=)
+- String-based timers (=setTimeout("...")=, =setInterval("...")=)
+- Hardcoded secrets (=token=, =secret=, =api_key=, =password= with quoted values)
+- Insecure HTTP URLs (=http://= excluding localhost)
+- Emits =::error= annotations on matching lines
+
+Excludes =eslint.config.mjs= (rule strings match patterns literally), =node_modules/=, =dist/=, =.cache/=.
+
+** CI License Headers (=.github/workflows/ci.yml=)
+Every =*.js=, =*.mjs=, =*.html=, =*.css=, =*.vue=, =*.scss= file must contain =Cristian D. Moreno= in the first 5 lines.
+
+** Pre-Check Failed Label
+The =Pre-Check Label= CI job aggregates all gate results. If any gate fails, the =Pre-Check Failed= label is applied to the PR.
+
+* Environment Variables
+Runtime config uses =VITE_*= env vars loaded from =.env= (gitignored). The tracked template is =.env.example= with empty placeholder values. Contributors copy it to =.env= and fill in their own values.
+
+Never hardcode credentials in source files. Always use =import.meta.env.VITE_*=.
+
+* For Contributors
+
+Before opening a PR, verify:
+
+1. =npm run lint= reports 0 errors
+2. No =.env=, =*.key=, =*.pem=, or secret files are staged (=git status=)
+3. New source files have the MPL-2.0 license header
+4. No =http://= URLs (use =https://= or =ws://localhost=)
+5. No =eval=, =innerHTML=, =document.write=, or string-based timers
+6. No hardcoded passwords, tokens, or API keys

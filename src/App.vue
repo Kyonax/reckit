@@ -5,9 +5,28 @@
 -->
 
 <template>
-  <router-view />
+  <div :class="brand_class">
+    <router-view />
+  </div>
 </template>
 
+<script setup>
+import { computed } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+
+const brand_class = computed(() => {
+  const handle = route.meta?.brand;
+
+  if (!handle) {
+    return '';
+  }
+
+  return `brand-${handle.replace('@', '').replace(/_/g, '-')}`;
+});
+</script>
+
 <style lang="scss">
-@use "./app/scss/main.scss";
+@use "@app/scss/main.scss";
 </style>

@@ -10,3 +10,7 @@
 @include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-Bold", 700, normal);
 @include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-Italic", 400, italic);
 @include mixins.font-face("SpaceMono", "SpaceMono/SpaceMonoNerdFont-BoldItalic", 700, italic);
+
+@include mixins.font-face("Geomanist", "Geomanist/GeomanistRegular", 400, normal);
+@include mixins.font-face("Geomanist", "Geomanist/GeomanistBold", 700, normal);
+@include mixins.font-face("Geomanist", "Geomanist/GeomanistItalic", 400, italic);

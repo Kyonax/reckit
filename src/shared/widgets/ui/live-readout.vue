@@ -40,7 +40,9 @@ const displayed = ref(props.text);
 let interval_id = null;
 
 function sync() {
-  displayed.value = props.text;
+  if (props.text !== displayed.value) {
+    displayed.value = props.text;
+  }
 }
 
 function stopPolling() {

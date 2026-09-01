@@ -35,11 +35,49 @@
 	}
 
 	--font-mono: "SpaceMono", "Roboto Mono", "Courier New", Courier, monospace;
+	--font-display: "Geomanist", "Inter", "Helvetica Neue", Arial, sans-serif;
 
 	--canvas-width: 1920px;
 	--canvas-height: 1080px;
 	--hud-bar-offset: 24px;
 	--hud-bar-gap: 24px;
+
+	--surface-bg: linear-gradient(135deg, hsl(0 0% 2%) 0%, hsl(0 0% 7%) 50%, hsl(0 0% 14%) 100%);
+
+	--motion-sidebar-ms: 280ms;
+	--motion-strip-ease: cubic-bezier(0.22, 1, 0.36, 1);
+	--motion-peek-pulse-s: 2.5s;
+	--motion-marquee-s: 90s;
+
+	--clr-primary-100-02: color-mix(in srgb, var(--clr-primary-100) 2%, transparent);
+	--clr-primary-100-03: color-mix(in srgb, var(--clr-primary-100) 3%, transparent);
+	--clr-primary-100-04: color-mix(in srgb, var(--clr-primary-100) 4%, transparent);
+	--clr-primary-100-06: color-mix(in srgb, var(--clr-primary-100) 6%, transparent);
+	--clr-primary-100-10: color-mix(in srgb, var(--clr-primary-100) 10%, transparent);
+	--clr-primary-100-14: color-mix(in srgb, var(--clr-primary-100) 14%, transparent);
+	--clr-primary-100-40: color-mix(in srgb, var(--clr-primary-100) 40%, transparent);
+	--clr-primary-100-80: color-mix(in srgb, var(--clr-primary-100) 80%, transparent);
+
+	--clr-neutral-50-02: color-mix(in srgb, var(--clr-neutral-50) 2%, transparent);
+	--clr-neutral-50-04: color-mix(in srgb, var(--clr-neutral-50) 4%, transparent);
+	--clr-neutral-50-12: color-mix(in srgb, var(--clr-neutral-50) 12%, transparent);
+
+	--hud-halo:
+		drop-shadow(0 0 1px rgba(0, 0, 0, 0.9))
+		drop-shadow(0 0 3px rgba(0, 0, 0, 0.6))
+		drop-shadow(0 0 6px rgba(0, 0, 0, 0.45));
+
+	--hud-halo-text:
+		0 0 1px rgba(0, 0, 0, 0.9),
+		0 0 3px rgba(0, 0, 0, 0.6),
+		0 0 6px rgba(0, 0, 0, 0.45);
+
+	--hud-glow-color: var(--clr-primary-100);
+	--hud-glow:
+		0 0 1px color-mix(in srgb, var(--hud-glow-color) 75%, transparent),
+		0 0 5px color-mix(in srgb, var(--hud-glow-color) 50%, transparent);
+
+	--hud-group-gap: 0.6em;
 }
 
 ::selection {
@@ -50,14 +88,4 @@
 ::-moz-selection {
 	background-color: var(--clr-primary-100);
 	color: var(--clr-neutral-500);
-}
-
-.cyberpunk-glow {
-	@include cyberpunk-glow(
-		var(--cyberpunk-glow-color, var(--clr-primary-100)),
-		var(--cyberpunk-glow-blur, 1px),
-		var(--cyberpunk-glow-spread, 9px),
-		true,
-		var(--cyberpunk-glow-speed, 1.5s)
-	);
 }

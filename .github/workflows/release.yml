@@ -1,9 +1,24 @@
-# ---------------------------------------------------------------
-# RECKIT Release Gate -- Enforced on dev -> master PRs
-# ---------------------------------------------------------------
-# Ensures CHANGELOG.org and README.org version are updated before
-# any code lands on master.
-# ---------------------------------------------------------------
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __             __           __              _      __
+#  / /_/ /  ___   ____/ /  ___ ____/ /__ ___  ___  (_)__  / /_
+# / __/ _ \/ -_) / __/ _ \/ -_) __/  '_// _ \/ _ \/ / _ \/ __/
+# \__/_//_/\__/  \__/_//_/\__/\__/_/\_\/ .__/\___/_/_//_/\__/
+#                                      /_/
+#
+# release.yml — Release gate for dev to master PRs
+# 2026-04-17
+#
+# Blocks merges to master unless the CHANGELOG and README
+# version have been updated. Only runs on PRs from dev.
+#
+#   CHANGELOG.org updated
+#   README.org version bumped
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
 
 name: Release Gate
 

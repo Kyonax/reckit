@@ -1,0 +1,111 @@
+# =============================================================================
+# kyo-recording-automation — OBS / recording automation (PUBLIC)
+# =============================================================================
+# TIGHTER THAN THE BRAIN, DELIBERATELY.
+#
+# This is a public repository holding real, working software with a test suite —
+# not notes and not configuration. Two things follow from that:
+#
+#   1. Nothing is published unless the tests pass. A config repo has nothing to
+#      verify; this one does, so the gates are wired in and a red suite stops
+#      the run rather than committing around it.
+#
+#   2. Code that changes behaviour goes through a pull request. `src/**` is on
+#      require_pr, so an unattended slot can save your work-in-progress but
+#      cannot land a logic change on the branch without a diff you looked at.
+#      Docs, assets and exports still push directly.
+#
+# The repo is currently on the feature branch `context-screen`. Under the
+# auto-save model that is exactly where a run will commit and push — shipwright
+# follows the branch you are on, it does not redirect you to main.
+#
+# Fingerprinted. Edit this and shipwright refuses to run until:
+#     shipwright approve kyo-recording-automation
+# =============================================================================
+
+schema = 1
+
+[repo]
+name = "kyo-recording-automation"
+default_branch = "master"
+remote = "origin"
+hot_window_min = 10
+
+[commit]
+# Derived from this repo's own history: feat 15, fix 9, refactor 2, chore 1.
+types = ["feat", "fix", "refactor", "chore", "docs", "test", "build"]
+scope_required = false
+scopes = ["src", "dist", "exported", "tests"]
+split_by_scope = true
+
+# Lower than the config repos on purpose. This is source: a slot that wants to
+# commit more than 40 files at once is either a generated-output dump or
+# something that deserves a human's eyes, and deferring costs only one slot.
+max_files = 40
+
+trailer = true
+
+[flow]
+# Direct is the base, but see [paths].require_pr — the source tree overrides it.
+# The one-way rule applies: require_pr can force a PR, nothing can force a push.
+mode = "direct"
+branch_prefix = "auto/"
+pr_draft = false
+pr_reviewers = []
+restore_branch = true
+
+[gates]
+# THE REAL PROTECTION for this repo.
+#
+# Every command must exit 0 before anything is committed, and their actual
+# output becomes the `Gates:` line — so a commit here can never claim a green
+# suite that did not run. A failure routes to the Class A repair (which may run
+# `lint:fix`) and, if that does not help, stops the repo with a notification.
+pre_commit = ["npm run lint"]
+pre_push   = ["npm test"]
+
+# The suite is small; 600s is generous and still bounds a wedged process.
+timeout_s = 600
+
+[tag]
+# No release process wired yet. Turn this on the day there is one — it reacts to
+# a version you already changed in package.json, it never invents a bump.
+enabled = false
+when = "never"
+
+[paths]
+# Generated output and vendored trees must never be committed by an automated
+# run: they are large, they churn on every build, and they are reproducible.
+never_commit = [
+  "node_modules/**",
+  "coverage/**",
+  "*.tsbuildinfo",
+  ".vite/**",
+]
+
+# THE IMPORTANT LINE.
+# A change under src/ changes what this software does. An unattended run may
+# save it, but only onto a branch with a pull request attached — never straight
+# onto the branch as a fait accompli. Everything else (docs, assets, exports)
+# still pushes directly, so the auto-save behaviour is preserved for the parts
+# where review adds nothing.
+require_pr = ["src/**", "package.json", ".github/**"]
+
+[repair]
+# Class A: may run the repo's own `lint:fix`. Touches no logic, does not mark
+# the run source-edited, keeps the normal flow.
+process = true
+
+# Class B: OFF for this repo.
+#
+# The brain and the config repos allow automatic conflict resolution because a
+# conflict there is two edits to the same note. A conflict in working source is
+# a decision about program behaviour, and a failed run waiting for you is a
+# better outcome than a resolution you did not make. shipwright will abort the
+# rebase and leave the worktree exactly as it found it.
+conflicts = false
+max_attempts = 2
+
+[schedule]
+slots = ["03:00", "06:00", "09:00", "11:00", "13:00", "15:00", "18:00", "21:00", "23:00"]
+min_interval_min = 0

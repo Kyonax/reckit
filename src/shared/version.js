@@ -12,10 +12,8 @@
 
 const MAJOR_MINOR_SEGMENTS = 2;
 
-/** Full semver string, e.g. "0.3.0". */
 export const VERSION = __APP_VERSION__;
 
-/** Short display tag, e.g. "v0.3". Strips the patch segment. */
 export const VERSION_TAG = `v${VERSION
   .split('.')
   .slice(0, MAJOR_MINOR_SEGMENTS)

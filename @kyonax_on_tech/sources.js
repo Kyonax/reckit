@@ -3,27 +3,17 @@
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
  *
- * Browser source registry — every overlay available in RECKIT.
- * Used by the landing page to render the index.
- *
- * Trigger protocol (for animated overlays):
- *   - Each overlay can declare a `triggers` array
- *   - Buttons appear on the card; clicking opens the overlay
- *     in a popup window and posts a message with the trigger
- *     payload using window.postMessage
- *   - Overlays receive triggers via window.addEventListener
- *     ('message', (event) => { ... event.data.action ... })
- *   - Triggers are intended for testing animations with dummy
- *     data; production triggers come from OBS WebSocket events
+ * Web source registry for @kyonax_on_tech.
  */
 
 const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const TARGET_FPS = 60;
 
-export const OVERLAYS = [
+export default [
   {
-    id: 'cam-person',
+    id: 'cam-log',
+    type: 'hud',
     brand: '@kyonax_on_tech',
     name: 'CAM-LOG',
     description:
@@ -41,7 +31,7 @@ export const OVERLAYS = [
       'talking head',
       'person to camera',
     ],
-    path: '/@kyonax_on_tech/cam-person',
+    path: '/@kyonax_on_tech/cam-log',
     width: CANVAS_WIDTH,
     height: CANVAS_HEIGHT,
     fps: TARGET_FPS,
@@ -54,7 +44,39 @@ export const OVERLAYS = [
     status: 'ready',
   },
   {
+    id: 'context-screen',
+    type: 'hud',
+    brand: '@kyonax_on_tech',
+    name: 'CONTEXT-SCREEN',
+    description:
+      'News-style **lower-third HUD** for the **CONTEXT scene**. '
+      + 'Surfaces the **video title**, a short **description**, '
+      + 'a **talking-point marquee**, and a **toggleable right '
+      + 'sidebar** that renders the **full parsed .org context** '
+      + '(headlines, lists, **checklists**, **tables**, **code '
+      + 'blocks**, **#+RESULTS evaluations**, links). Authored '
+      + 'per video as a small **.org file** in the brand folder.',
+    use_cases: [
+      'video context overlay',
+      'news-style lower third',
+      'topic outline',
+      'code walkthrough sidebar',
+      'talking-points reel',
+    ],
+    path: '/@kyonax_on_tech/context-screen',
+    width: CANVAS_WIDTH,
+    height: CANVAS_HEIGHT,
+    fps: TARGET_FPS,
+    requires: [
+      '.org files at @kyonax_on_tech/data/contexts/',
+      'BroadcastChannel-capable browser (OBS Chromium 32+)',
+    ],
+    triggers: [],
+    status: 'ready',
+  },
+  {
     id: 'item-explain',
+    type: 'animation',
     brand: '@kyonax_on_tech',
     name: 'ITEM-EXPLAIN',
     description:
@@ -100,8 +122,7 @@ export const OVERLAYS = [
       {
         id: 'cycle',
         label: 'CYCLE',
-        description:
-          'Run a full show → wait → hide sequence',
+        description: 'Run a full show, wait, hide sequence',
         payload: { action: 'cycle', duration_ms: 5000 },
       },
     ],

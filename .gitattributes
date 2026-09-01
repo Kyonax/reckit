@@ -1,3 +1,25 @@
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __         __     __
+#  / /_/ /  ___   / /__ _/ /
+# / __/ _ \/ -_) / / _ `/ _ \
+# \__/_//_/\__/ /_/\_,_/_.__/
+#
+# .gitattributes — Git file handling rules
+# 2026-04-17
+#
+# Controls how Git handles specific files on checkout and commit.
+# The logo.txt rule prevents Windows CRLF from corrupting the
+# Unicode box-drawing glyphs in the ASCII logo.
+#
+# logo.txt: UTF-8 + LF enforcement
+# Default: auto-normalize text to LF
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
+
 # Preserve box-drawing characters and line endings in the brand logo.
 # Windows clones would otherwise apply CRLF conversion and potentially
 # corrupt the Unicode frame glyphs.

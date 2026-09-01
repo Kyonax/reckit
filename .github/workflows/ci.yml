@@ -1,18 +1,34 @@
-# ---------------------------------------------------------------
-# RECKIT CI -- Lint, Security Scan, License & Protected-File Gates
-# ---------------------------------------------------------------
-# Triggers:
-#   - pull_request: ANY target branch. A PR from `sub-feature`
-#     to `feat-cam-person` runs the same gates as a PR to
-#     `dev` or `master`. This is intentional — every merge in
-#     the chain must meet the pre-check bar before reaching
-#     dev / master.
-#   - push: feature branches only (`feat-*`, `feat/*`,
-#     `feature/*`, `fix-*`, `fix/*`). Gives developers
-#     feedback before they open a PR. master / dev are skipped
-#     here because they're protected and only receive commits
-#     via PRs (which fire the pull_request trigger above).
-# ---------------------------------------------------------------
+# Copyright (c) 2026 Cristian D. Moreno — @Kyonax
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. See LICENSE or https://mozilla.org/MPL/2.0/
+
+#   __  __                     __      __   __
+#  / /_/ /  ___   _    _____ _/ /_____/ /  / /____ _    _____ ____
+# / __/ _ \/ -_) | |/|/ / _ `/ __/ __/ _ \/ __/ _ \ |/|/ / -_) __/
+# \__/_//_/\__/  |__,__/\_,_/\__/\__/_//_/\__/\___/__,__/\__/_/
+#
+# ci.yml — CI gate suite
+# 2026-04-17
+#
+# Runs every gate on all pull_request targets and feat/fix push
+# branches. Concurrency group dedups push-vs-PR double runs.
+# Pre-Check Label aggregates all results into one label.
+#
+#   ESLint
+#   Security Scan
+#   License Headers
+#   Protected Files
+#   Unit Tests
+#   Pre-Check Label (aggregator)
+#
+# Guidelines:
+#   New jobs must be added to Pre-Check Label needs list
+#   Security Scan excludes eslint.config.mjs (rule strings match patterns)
+#   License Headers checks first 5 lines for Cristian D. Moreno
+#   Protected Files is advisory only, never blocks
+#
+# Cristian D. Moreno (Kyonax)
+# kyonax.corp@gmail.com
 
 name: CI
 
