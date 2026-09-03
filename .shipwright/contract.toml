@@ -27,9 +27,17 @@ schema = 1
 
 [repo]
 name = "kyo-recording-automation"
+
+# Tier: mine, but reviewed. Declaring it makes the minimum binding —
+# a pull-request mode, or a require_pr list naming what must be looked at.
+tier = "guarded"
 default_branch = "master"
 remote = "origin"
-hot_window_min = 10
+hot_window_min = 1
+# Seconds, not minutes. A whole minute of sitting on finished work is a
+# long time; this is the wait that stops a run landing on top of an edit
+# you are still making, and 30s is enough for that.
+hot_window_s = 30
 
 [commit]
 # Derived from this repo's own history: feat 15, fix 9, refactor 2, chore 1.
