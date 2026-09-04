@@ -117,3 +117,22 @@ max_attempts = 2
 [schedule]
 slots = ["03:00", "06:00", "09:00", "11:00", "13:00", "15:00", "18:00", "21:00", "23:00"]
 min_interval_min = 0
+
+# -----------------------------------------------------------------------------
+# [context] - which brain session node explains the work in this repository.
+# -----------------------------------------------------------------------------
+# Shipwright only ever READS that node. The map lives HERE, in a file that is
+# fingerprinted and approved, rather than being searched for at run time: an
+# agent acting on the WRONG context is a worse failure than one acting on none.
+#
+# Until this block existed in a live contract, every repo in the fleet resolved
+# by the drawer fallback instead - two of ten resolved at all, and the two that
+# did were decided by a :PATH: string match that two different nodes can claim.
+# DELIBERATELY EMPTY, and that is a supported answer rather than a gap:
+# "finding nothing is never an error" (lib/_context.sh). An agent here
+# works from the repository alone and says so, which is correct until
+# somebody decides which session actually owns this repo.
+# Candidates: kyo-multiverse-nexus-video-making, omarchy-zone-capture-setup
+[context]
+session = ""
+branches = {}
