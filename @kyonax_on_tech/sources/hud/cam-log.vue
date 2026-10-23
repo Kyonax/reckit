@@ -28,8 +28,25 @@
 
       <div class="hud-group group--bottom-left group--identity">
         <span class="hud-text">{{ brand.identity.author }}</span>
-        <span class="hud-text hud-text--primary">
-          {{ brand.identity.display_handle }}
+        <span class="hud-text hud-text--primary socials">
+          <template
+            v-for="(social, index) in active_account.socials"
+            :key="social.handle"
+          >
+            <span
+              v-if="index"
+              class="socials__divider"
+            >//</span>
+            <span class="socials__group">
+              <UiIcon
+                v-for="platform in social.platforms"
+                :key="platform"
+                :name="`social-${platform}`"
+                class="socials__icon"
+              />
+              {{ social.handle }}
+            </span>
+          </template>
         </span>
       </div>
 
@@ -79,13 +96,11 @@ import HudFrame from '@hud/frame.vue';
 import HudTimer from '@hud/timer.vue';
 import { getBrand } from '@shared/brand-loader.js';
 import { VERSION_TAG } from '@shared/version.js';
+import UiIcon from '@ui/icon.vue';
 import AudioMeter from '@widgets/hud/audio-meter.vue';
 import LiveReadout from '@widgets/ui/live-readout.vue';
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc.js';
-import { computed, ref } from 'vue';
-
-dayjs.extend(utc);
+import { computed, onUnmounted, ref } from 'vue';
 
 const brand = getBrand('@kyonax_on_tech');
 
@@ -93,6 +108,7 @@ const CANVAS_WIDTH = 1920;
 const CANVAS_HEIGHT = 1080;
 const TAKE_PAD_LENGTH = 2;
 const DEBUG_REFRESH_MS = 200;
+const DATE_REFRESH_MS = 60000;
 const DEFAULT_SESSION_LABEL = 'SESSION';
 
 const { connected } = useObsWebsocket();
@@ -108,6 +124,13 @@ const { scene_name } = useSceneName();
 // hardcoded default whenever the relay carries nothing.
 const channel = useContextChannel();
 
+// The account the video goes out on, picked in the OBS script panel.
+// Its handles show under the author, one group per shared handle.
+const active_account = computed(() => {
+  const chosen = channel.account ? channel.account.value : '';
+  return brand.accounts[chosen] || brand.accounts[brand.default_account];
+});
+
 const session_label = computed(() => {
   const label = (channel.cam_label.value || '').trim();
   return (label || DEFAULT_SESSION_LABEL).toUpperCase();
@@ -119,10 +142,18 @@ const audio_state = ref({
   peak: 0,
 });
 
-const session_date = dayjs()
-  .utc()
+// The machine's local date (what the owner's device shows), not UTC: UTC
+// turns the label to the next day from 19:00 in Colombia. Re-read every
+// minute so a session that crosses midnight keeps the right day.
+const now = ref(dayjs());
+const date_timer = setInterval(() => {
+  now.value = dayjs();
+}, DATE_REFRESH_MS);
+onUnmounted(() => clearInterval(date_timer));
+
+const session_date = computed(() => now.value
   .format(`[${brand.region} ∇ ]DD.MM.YYYY[ // ]ddd`)
-  .toUpperCase();
+  .toUpperCase());
 
 const session_id = computed(() => {
   const name = (scene_name.value || '---').toUpperCase();
@@ -184,6 +215,31 @@ const debug_text = computed(() => {
 
 .group--identity {
   gap: calc(var(--hud-group-gap) / 2);
+}
+
+.socials {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+}
+
+.socials__group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+
+/* Logos as tall as the capitals beside them, sitting on the baseline. */
+.socials__icon :deep(svg) {
+  display: block;
+  width: 0.72em;
+  height: 0.72em;
+  width: 1cap;
+  height: 1cap;
+}
+
+.socials__divider {
+  opacity: 0.55;
 }
 
 .hud-text {

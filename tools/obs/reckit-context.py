@@ -25,7 +25,8 @@
 #
 # Talks to the Vite dev-server relay documented in session file §1.16:
 # GET/POST JSON at <base>/__context_state, shape
-# { "active_slug": str|null, "sidebar_open": bool, "draft_org": str }.
+# { "active_slug": str|null, "sidebar_open": bool, "draft_org": str,
+#   "cam_label": str, "sidebar_scroll": int, "account": str }.
 #
 #   Tools -> Scripts -> + -> select this file
 #
@@ -39,6 +40,9 @@
 
 import json
 import os
+import re
+import subprocess
+import time
 import urllib.error
 import urllib.request
 
@@ -46,6 +50,17 @@ import obspython as obs
 
 RELAY_PATH = "/__context_state"
 REQUEST_TIMEOUT_S = 1.5
+CLIPBOARD_TIMEOUT_S = 3
+# Clipboard image types we take, in order of preference, with the file
+# extension each is saved under.
+IMAGE_TYPES = (
+    ("image/png", "png"),
+    ("image/jpeg", "jpg"),
+    ("image/webp", "webp"),
+    ("image/gif", "gif"),
+    ("image/avif", "avif"),
+)
+HEADING_RE = re.compile(r"^\*+\s")
 
 DEFAULT_BASE_URL = "http://localhost:5173"
 DEFAULT_CONTEXTS_DIR = (
@@ -56,6 +71,8 @@ base_url = DEFAULT_BASE_URL
 contexts_dir = DEFAULT_CONTEXTS_DIR
 active_slug = ""
 sidebar_open = False
+# 0-100: the open sidebar's scroll position, set by hand with the slider.
+sidebar_scroll = 0
 
 # Live-text draft fields.
 use_live_text = False
@@ -70,6 +87,13 @@ save_slug = "live-note"
 # cam-log HUD: the bracketed label on its top-right row, e.g. [SESSION].
 # Empty string lets the overlay use its own default.
 cam_label = ""
+
+# Account the video goes out on: a key of the brand's data/accounts.json.
+# The HUD shows its handles per platform; empty uses the brand default.
+account = ""
+
+# Heading the pasted image goes under; empty = the end of the file.
+paste_heading = ""
 
 # slug -> display title, rebuilt by refresh_contexts()
 context_titles = {}
@@ -149,6 +173,8 @@ def push():
         "sidebar_open": bool(sidebar_open),
         "draft_org": draft,
         "cam_label": cam_label,
+        "sidebar_scroll": int(sidebar_scroll),
+        "account": account,
     }).encode("utf-8")
     try:
         req = urllib.request.Request(
@@ -189,6 +215,21 @@ def read_title(path):
     return os.path.splitext(os.path.basename(path))[0]
 
 
+def read_accounts():
+    """Return (default_key, [(key, label)]) from the brand's accounts.json."""
+    path = os.path.join(
+        os.path.dirname(contexts_dir.rstrip("/")), "accounts.json")
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+    except (OSError, ValueError) as err:
+        obs.script_log(obs.LOG_WARNING, f"[reckit] accounts unreadable: {err}")
+        return "", []
+    accounts = data.get("accounts", {})
+    return data.get("default", ""), [
+        (key, value.get("label", key)) for key, value in accounts.items()]
+
+
 def refresh_contexts():
     """Rescan the contexts directory for .org files."""
     global context_titles, context_slugs
@@ -210,6 +251,51 @@ def refresh_contexts():
         obs.LOG_INFO,
         f"[reckit] discovered {len(context_slugs)} context(s)",
     )
+
+
+# ------------------------------------------------------- clipboard image
+
+def clipboard_image():
+    """Return (bytes, extension) of the clipboard's image, or None."""
+    try:
+        listed = subprocess.run(
+            ["wl-paste", "--list-types"], capture_output=True,
+            timeout=CLIPBOARD_TIMEOUT_S, check=False)
+        offered = listed.stdout.decode("utf-8", "replace").splitlines()
+        for mime, extension in IMAGE_TYPES:
+            if mime not in offered:
+                continue
+            data = subprocess.run(
+                ["wl-paste", "--no-newline", "--type", mime],
+                capture_output=True, timeout=CLIPBOARD_TIMEOUT_S,
+                check=False).stdout
+            if data:
+                return data, extension
+    except (OSError, subprocess.TimeoutExpired) as err:
+        obs.script_log(obs.LOG_WARNING, f"[reckit] wl-paste failed: {err}")
+    return None
+
+
+def embed_line(text, link, heading):
+    """Put LINK at the end of HEADING's own text, else at the end."""
+    lines = text.rstrip("\n").split("\n")
+    target = heading.strip().lower()
+    start = None
+    if target:
+        for index, line in enumerate(lines):
+            if HEADING_RE.match(line) and \
+                    line.lstrip("*").strip().lower() == target:
+                start = index
+                break
+    if start is None:
+        return "\n".join(lines + ["", link]) + "\n"
+    end = start + 1
+    while end < len(lines) and not HEADING_RE.match(lines[end]):
+        end += 1
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1
+    after = [""] if end < len(lines) and lines[end].strip() else []
+    return "\n".join(lines[:end] + ["", link] + after + lines[end:]) + "\n"
 
 
 def step_context(delta):
@@ -312,6 +398,41 @@ def button_pull(props, prop):
     return True
 
 
+def button_paste_image(props, prop):
+    """Save the clipboard's image beside the active context, embed it."""
+    if not active_slug:
+        obs.script_log(obs.LOG_WARNING, "[reckit] pick a context file first")
+        return True
+    path = os.path.join(contexts_dir, f"{active_slug}.org")
+    if not os.path.isfile(path):
+        obs.script_log(obs.LOG_WARNING, f"[reckit] no such file: {path}")
+        return True
+    found = clipboard_image()
+    if not found:
+        obs.script_log(obs.LOG_WARNING, "[reckit] no image in the clipboard")
+        return True
+    data, extension = found
+    name = f"{active_slug}-{time.strftime('%Y%m%d-%H%M%S')}.{extension}"
+    images_dir = os.path.join(contexts_dir, "images")
+    try:
+        os.makedirs(images_dir, exist_ok=True)
+        with open(os.path.join(images_dir, name), "wb") as handle:
+            handle.write(data)
+        with open(path, "r", encoding="utf-8") as handle:
+            text = handle.read()
+        temp = path + ".tmp"
+        with open(temp, "w", encoding="utf-8") as handle:
+            handle.write(embed_line(text, f"[[file:images/{name}]]",
+                                    paste_heading))
+        os.replace(temp, path)
+    except OSError as err:
+        obs.script_log(obs.LOG_WARNING, f"[reckit] paste failed: {err}")
+        return True
+    obs.script_log(
+        obs.LOG_INFO, f"[reckit] pasted images/{name} into {active_slug}.org")
+    return True
+
+
 def button_save_draft(props, prop):
     """Persist the live draft to <contexts_dir>/<save_slug>.org."""
     draft = build_draft_org()
@@ -352,6 +473,15 @@ def script_description():
         "org markup (headings, <code>- lists</code>, "
         "<code>- [ ] checkboxes</code>, tables, "
         "<code>#+begin_src</code> blocks).<br><br>"
+        "<b>Sidebar scroll</b> — drag to scroll the open sidebar by hand; "
+        "its auto-scroll stops until the sidebar closes.<br><br>"
+        "<b>Account</b> — the account the video goes out on; the HUD "
+        "shows its handles per platform and the lower third its handle."
+        "<br><br>"
+        "<b>Paste clipboard image</b> — copy an image (or pick one from "
+        "the clipboard history), press the button: it is saved in the "
+        "contexts folder's <code>images/</code> and embedded in the active "
+        ".org file, under the heading you name or at the end.<br><br>"
         "Requires the RECKIT dev server — set the base URL to match "
         "its port. Bind the four <b>RECKIT:</b> actions in "
         "<i>Settings → Hotkeys</i>."
@@ -363,9 +493,11 @@ def script_defaults(settings):
     obs.obs_data_set_default_string(
         settings, "contexts_dir", DEFAULT_CONTEXTS_DIR)
     obs.obs_data_set_default_bool(settings, "sidebar_open", False)
+    obs.obs_data_set_default_int(settings, "sidebar_scroll", 0)
     obs.obs_data_set_default_bool(settings, "use_live_text", False)
     obs.obs_data_set_default_string(settings, "save_slug", "live-note")
     obs.obs_data_set_default_string(settings, "cam_label", "")
+    obs.obs_data_set_default_string(settings, "account", read_accounts()[0])
 
 
 def script_properties():
@@ -386,6 +518,20 @@ def script_properties():
         obs.obs_property_list_add_string(picker, label, slug)
 
     obs.obs_properties_add_bool(props, "sidebar_open", "Sidebar open")
+    obs.obs_properties_add_int_slider(
+        props, "sidebar_scroll", "Sidebar scroll (%)", 0, 100, 1)
+    obs.obs_properties_add_text(
+        props, "paste_heading", "Paste image under heading",
+        obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_button(
+        props, "btn_paste_image", "Paste clipboard image", button_paste_image)
+
+    # ---- account (handles on the HUD and the lower third) ---------------
+    picker_account = obs.obs_properties_add_list(
+        props, "account", "Account (social handles)",
+        obs.OBS_COMBO_TYPE_LIST, obs.OBS_COMBO_FORMAT_STRING)
+    for key, label in read_accounts()[1]:
+        obs.obs_property_list_add_string(picker_account, label, key)
 
     # ---- cam-log --------------------------------------------------------
     obs.obs_properties_add_text(
@@ -434,19 +580,22 @@ def script_update(settings):
     global base_url, contexts_dir, active_slug, sidebar_open
     global use_live_text, draft_title, draft_subtitle, draft_description
     global draft_tags, draft_marquee, draft_body, save_slug, cam_label
+    global sidebar_scroll, paste_heading, account
 
     new_dir = obs.obs_data_get_string(settings, "contexts_dir")
     base_url = obs.obs_data_get_string(settings, "base_url")
     save_slug = obs.obs_data_get_string(settings, "save_slug")
+    paste_heading = obs.obs_data_get_string(settings, "paste_heading")
 
     before = (
         active_slug, sidebar_open, use_live_text, draft_title,
         draft_subtitle, draft_description, draft_tags, draft_marquee,
-        draft_body, cam_label,
+        draft_body, cam_label, sidebar_scroll, account,
     )
 
     active_slug = obs.obs_data_get_string(settings, "context_slug")
     sidebar_open = obs.obs_data_get_bool(settings, "sidebar_open")
+    sidebar_scroll = obs.obs_data_get_int(settings, "sidebar_scroll")
     use_live_text = obs.obs_data_get_bool(settings, "use_live_text")
     draft_title = obs.obs_data_get_string(settings, "draft_title")
     draft_subtitle = obs.obs_data_get_string(settings, "draft_subtitle")
@@ -455,11 +604,12 @@ def script_update(settings):
     draft_marquee = obs.obs_data_get_string(settings, "draft_marquee")
     draft_body = obs.obs_data_get_string(settings, "draft_body")
     cam_label = obs.obs_data_get_string(settings, "cam_label")
+    account = obs.obs_data_get_string(settings, "account")
 
     after = (
         active_slug, sidebar_open, use_live_text, draft_title,
         draft_subtitle, draft_description, draft_tags, draft_marquee,
-        draft_body, cam_label,
+        draft_body, cam_label, sidebar_scroll, account,
     )
 
     dir_changed = new_dir != contexts_dir
