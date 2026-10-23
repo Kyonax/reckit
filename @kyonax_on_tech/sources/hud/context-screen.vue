@@ -40,6 +40,26 @@
   >
     <div class="context-lower">
       <div class="context-strip">
+        <div class="context-strip__socials">
+          <template
+            v-for="(social, index) in active_account.socials"
+            :key="social.handle"
+          >
+            <span
+              v-if="index"
+              class="context-strip__socials-divider"
+            >//</span>
+            <span class="context-strip__socials-group">
+              <UiIcon
+                v-for="platform in social.platforms"
+                :key="platform"
+                :name="`social-${platform}`"
+                class="context-strip__socials-icon"
+              />
+              {{ social.handle }}
+            </span>
+          </template>
+        </div>
         <template v-if="parsed">
           <div class="context-strip__title">
             {{ parsed.title }}
@@ -125,11 +145,12 @@
 
 <script setup>
 import { useContextChannel } from '@composables/use-context-channel.js';
-import { getContexts } from '@shared/brand-loader.js';
+import { getBrand, getContexts } from '@shared/brand-loader.js';
 import { parseOrg } from '@shared/utils/org.js';
 import UiChip from '@ui/chip.vue';
+import UiIcon from '@ui/icon.vue';
 import UiOrgContent from '@ui/org-content.vue';
-import { computed, onUnmounted, ref, watch } from 'vue';
+import { computed, onUnmounted, provide, ref, watch } from 'vue';
 
 const BRAND_HANDLE = '@kyonax_on_tech';
 const OPEN_DELAY_MS = 3000;
@@ -138,9 +159,22 @@ const SCROLL_SPEED_PX_PER_SEC = 16;
 const MS_PER_SEC = 1000;
 const MARQUEE_HALF_REPEATS = 3;
 const USER_INTERACTION_PAUSE_MS = 5000;
+const PERCENT = 100;
 
+const brand = getBrand(BRAND_HANDLE);
 const contexts = getContexts(BRAND_HANDLE);
 const channel = useContextChannel();
+
+// Image links in a context resolve against its folder, which the dev
+// server serves as is (<brand>/data/contexts/).
+provide('org-asset-base', `${window.location.origin}/${BRAND_HANDLE}/data/contexts/`);
+
+// The account the video goes out on, picked in the OBS script panel.
+// Its handles head the lower third, the same row the cam-log HUD shows.
+const active_account = computed(() => {
+  const chosen = channel.account ? channel.account.value : '';
+  return brand.accounts[chosen] || brand.accounts[brand.default_account];
+});
 
 // A live draft (authored in the OBS script panel and delivered over the
 // relay) OVERRIDES the build-time file context. It is parsed here at
@@ -295,6 +329,35 @@ function detachInteractionListeners() {
   body.removeEventListener('touchstart', handleUserInteraction);
 }
 
+// Hand scroll from the OBS panel's slider (0-100 % of the scrollable
+// height). The first value the page hears is only the current setting;
+// every later change takes over from the auto-scroll until the sidebar
+// closes. Guarded so the page also runs on a channel without the field.
+let scroll_by_hand = false;
+
+function scrollToPercent(percent) {
+  const body = sidebar_body_el.value;
+  if (!body) {
+    return;
+  }
+  const max_scroll = Math.max(0, body.scrollHeight - body.clientHeight);
+  body.scrollTo({ top: (max_scroll * percent) / PERCENT, behavior: 'smooth' });
+}
+
+if (channel.sidebar_scroll) {
+  watch(channel.sidebar_scroll, (percent, previous) => {
+    if (typeof percent !== 'number' || typeof previous !== 'number') {
+      return;
+    }
+    if (!channel.sidebar_open.value) {
+      return;
+    }
+    scroll_by_hand = true;
+    cancelAutoScroll();
+    scrollToPercent(percent);
+  });
+}
+
 watch(channel.sidebar_open, (open) => {
   if (open) {
     requestAnimationFrame(() => {
@@ -303,6 +366,7 @@ watch(channel.sidebar_open, (open) => {
     });
     return;
   }
+  scroll_by_hand = false;
   cancelAutoScroll();
   detachInteractionListeners();
   if (sidebar_body_el.value) {
@@ -315,6 +379,10 @@ watch(parsed, () => {
     return;
   }
   cancelAutoScroll();
+  if (scroll_by_hand) {
+    requestAnimationFrame(() => scrollToPercent(channel.sidebar_scroll.value));
+    return;
+  }
   requestAnimationFrame(() => startAutoScroll());
 });
 
@@ -434,6 +502,31 @@ html:has(.context-screen-overlay) {
  * supports it, same as the `html:has(...)` rule above. */
 .context-strip:has(+ .context-marquee) {
   border-bottom: none;
+}
+
+.context-strip__socials {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7em;
+}
+
+.context-strip__socials-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+
+/* Logos as tall as the capitals beside them, sitting on the baseline. */
+.context-strip__socials-icon :deep(svg) {
+  display: block;
+  width: 0.72em;
+  height: 0.72em;
+  width: 1cap;
+  height: 1cap;
+}
+
+.context-strip__socials-divider {
+  opacity: 0.55;
 }
 
 .context-strip__title {

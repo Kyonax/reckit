@@ -1,0 +1,19 @@
+{
+  "default": "kyonax_on_tech",
+  "accounts": {
+    "kyonax_on_tech": {
+      "label": "@kyonax_on_tech",
+      "socials": [
+        { "platforms": ["instagram", "tiktok", "youtube"], "handle": "@kyonax_on_tech" },
+        { "platforms": ["x"], "handle": "@kyonax" }
+      ]
+    },
+    "is_kyonax": {
+      "label": "@is.kyonax",
+      "socials": [
+        { "platforms": ["instagram", "tiktok", "youtube"], "handle": "@is.kyonax" },
+        { "platforms": ["x"], "handle": "@kyonax_on" }
+      ]
+    }
+  }
+}

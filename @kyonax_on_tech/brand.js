@@ -8,7 +8,11 @@
  * Identity + links + description live here. Colors and tokens live
  * in `styles/_theme.scss` — that file is the single source of truth
  * for the brand's visual palette. `brand.js` never duplicates it.
+ * The accounts a video goes out on (and their handles per platform)
+ * live in `data/accounts.json`, read by the HUD and the OBS script.
  */
+
+import account_data from './data/accounts.json';
 
 export default {
   handle: '@kyonax_on_tech',
@@ -24,8 +28,11 @@ export default {
     display_handle: '@kyonax_on_tech',
   },
 
+  accounts: account_data.accounts,
+  default_account: account_data.default,
+
   links: {
-    x: 'https://x.com/kyonax_on_tech',
+    x: 'https://x.com/kyonax',
     youtube: 'https://www.youtube.com/channel/UCrNDk3dbrDQL9CWd1_fjyvA',
     github: 'https://github.com/kyonax',
   },

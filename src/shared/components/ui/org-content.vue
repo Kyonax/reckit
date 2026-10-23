@@ -229,6 +229,15 @@
         <UiOrgContent :ast="node.children" />
       </blockquote>
 
+      <!-- image: a file link to an image with no description, shown
+           inline the way org itself shows it -->
+      <img
+        v-else-if="isImageLink(node)"
+        class="org-image"
+        :src="imageSrc(node)"
+        :alt="imageAlt(node)"
+      >
+
       <!-- link -->
       <a
         v-else-if="node.type === 'link' && isExternalLink(node)"
@@ -267,7 +276,7 @@
 
 <script setup>
 import { highlightCode } from '@shared/utils/highlight.js';
-import { ref, watch } from 'vue';
+import { inject, ref, watch } from 'vue';
 
 const HEADLINE_LEVEL_OFFSET = 1;
 const MAX_HEADLINE_TAG = 6;
@@ -285,6 +294,7 @@ const EXTERNAL_LINK_TYPES = new Set([
 ]);
 
 const ALERT_TYPES = ['NOTE', 'TIP', 'IMPORTANT', 'WARNING', 'CAUTION'];
+const IMAGE_PATH_RE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 const ALERT_PREFIX_RE = /^\[!(\w+)\]\s*/;
 /*
  * Octicon path data straight from GitHub's primer/octicons repository
@@ -350,6 +360,27 @@ function hasResults(node) {
 
 function isExternalLink(node) {
   return EXTERNAL_LINK_TYPES.has(node.linkType);
+}
+
+// Relative image paths resolve against the folder of the .org file being
+// shown. A page that renders files from disk provides that folder's URL
+// under 'org-asset-base' (context-screen does); without it the path is used
+// as written.
+const asset_base = inject('org-asset-base', null);
+
+function isImageLink(node) {
+  return node.type === 'link'
+    && node.linkType === 'file'
+    && !(node.children && node.children.length)
+    && IMAGE_PATH_RE.test(node.path || '');
+}
+
+function imageSrc(node) {
+  return asset_base ? new URL(node.path, asset_base).href : node.path;
+}
+
+function imageAlt(node) {
+  return (node.path || '').split('/').pop().replace(IMAGE_PATH_RE, '');
 }
 
 function standardRows(table_node) {
@@ -1079,6 +1110,14 @@ watch(
 }
 
 /* Links */
+.org-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0.5em 0;
+  border: 1px solid var(--clr-border-100);
+}
+
 .org-link {
   color: var(--clr-primary-100);
   text-decoration: underline;
