@@ -48,6 +48,14 @@ export function useContextChannel() {
   // Empty string means "use the component's own default" — the relay
   // never dictates a fallback, the consumer owns it.
   const cam_label = ref('');
+  // Sidebar scroll set by hand from the OBS script panel's slider: 0-100,
+  // the percent of the sidebar's scrollable height. null leaves the
+  // overlay's own auto-scroll in charge. Consumers act on changes only.
+  const sidebar_scroll = ref(null);
+  // Account the video goes out on (a key of the brand's accounts.json),
+  // chosen in the OBS script panel; the HUD shows its handles. Empty
+  // string means the brand's default account.
+  const account = ref('');
 
   const persisted = readPersistedState();
   if (persisted) {
@@ -62,6 +70,12 @@ export function useContextChannel() {
     }
     if (typeof persisted.cam_label === 'string') {
       cam_label.value = persisted.cam_label;
+    }
+    if (typeof persisted.sidebar_scroll === 'number') {
+      sidebar_scroll.value = persisted.sidebar_scroll;
+    }
+    if (typeof persisted.account === 'string') {
+      account.value = persisted.account;
     }
   }
 
@@ -81,6 +95,12 @@ export function useContextChannel() {
     }
     if (typeof remote.cam_label === 'string') {
       cam_label.value = remote.cam_label;
+    }
+    if (typeof remote.sidebar_scroll === 'number') {
+      sidebar_scroll.value = remote.sidebar_scroll;
+    }
+    if (typeof remote.account === 'string') {
+      account.value = remote.account;
     }
   }
 
@@ -164,6 +184,8 @@ export function useContextChannel() {
           sidebar_open: sidebar_open.value,
           draft_org: draft_org.value,
           cam_label: cam_label.value,
+          sidebar_scroll: sidebar_scroll.value,
+          account: account.value,
         }),
       );
     } catch {
@@ -177,6 +199,8 @@ export function useContextChannel() {
       sidebar_open: sidebar_open.value,
       draft_org: draft_org.value,
       cam_label: cam_label.value,
+      sidebar_scroll: sidebar_scroll.value,
+      account: account.value,
     };
     channel.postMessage(snapshot);
     pushState(snapshot);
@@ -215,7 +239,7 @@ export function useContextChannel() {
   const scope = effectScope(true);
   scope.run(() => {
     watch(
-      [active_slug, sidebar_open, draft_org, cam_label],
+      [active_slug, sidebar_open, draft_org, cam_label, sidebar_scroll, account],
       schedulePersist,
     );
     watch(sidebar_open, (open) => applyDocumentClass(open));
@@ -228,6 +252,8 @@ export function useContextChannel() {
     sidebar_open,
     draft_org,
     cam_label,
+    sidebar_scroll,
+    account,
     setActiveSlug,
     toggleSidebar,
     hideSidebar,

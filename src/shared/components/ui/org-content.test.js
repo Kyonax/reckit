@@ -139,6 +139,22 @@ describe('<UiOrgContent>', () => {
     expect(link.attributes('rel')).toContain('noopener');
   });
 
+  it('renders a bare file link to an image as <img.org-image> on the provided base', () => {
+    const wrapper = mount(UiOrgContent, {
+      props: {
+        ast: buildBodyAst('* H\n\n[[file:images/a b.png]]\n\n[[file:images/d.png][a photo]]\n'),
+      },
+      global: {
+        provide: { 'org-asset-base': 'http://localhost:5174/@brand/data/contexts/' },
+      },
+    });
+    const images = wrapper.findAll('img.org-image');
+    expect(images).toHaveLength(1);
+    expect(images[0].attributes('src'))
+      .toBe('http://localhost:5174/@brand/data/contexts/images/a%20b.png');
+    expect(images[0].attributes('alt')).toBe('a b');
+  });
+
   it('renders horizontal rule as <hr.org-hr>', () => {
     const wrapper = mountFixture();
     expect(wrapper.find('hr.org-hr').exists()).toBe(true);
